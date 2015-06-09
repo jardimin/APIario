@@ -1,0 +1,20 @@
+<table class="table table-striped" id="jobs">
+  <thead>
+    <tr>
+      <th class="center"><%= sortable 'id', 'Job ID' %></th>
+      <th><%= sortable 'source_file', 'Input File' %></th>
+      <th class="center"><%= sortable 'duration', 'Input duration' %></th>
+      <th><%= sortable 'filesize', 'Input size' %></th>
+      <th><%= sortable 'created_at', 'Submitted' %></th>
+      <th><%= sortable 'preset_id', 'Preset' %></th>
+      <th><%= sortable 'host_id', 'Host' %></th>
+      <th><%= sortable 'state', 'Status' %></th>
+			<th><%= sortable 'completed_at', 'After' %></th>
+    </tr>
+  </thead>
+  
+  <tbody id="item_list">
+    <%= render @jobs %>
+  </tbody>
+  
+</table>

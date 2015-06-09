@@ -1,0 +1,15 @@
+<% title 'Jobs' %>
+
+<%= section 'History' do %>
+  <%= render "history" %>
+<% end %>
+
+<%= section 'Jobs' do %>
+  <%= render "jobs" %>
+  
+  <%= will_paginate @jobs %>
+<% end %>
+
+<div class="form-actions">
+  <%= link_to 'New job', new_job_path, :class => 'btn btn-primary' %>
+</div>

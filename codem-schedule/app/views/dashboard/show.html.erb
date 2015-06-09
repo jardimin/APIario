@@ -1,0 +1,37 @@
+<% title 'Dashboard' %>
+
+<%= section 'History' do %>
+  <%= render "history" %>
+<% end %>
+
+<%= section 'Recently scheduled jobs' do %>
+  <%- if @scheduled_jobs.any? -%>
+  	<% @jobs = @scheduled_jobs %>
+  	<%= render "/jobs/jobs" %>
+  <%- else -%>
+  	<p>No recently scheduled jobs.</p>
+  <%- end -%>
+<% end %>
+  
+<%= section 'Recently processing jobs' do %>
+  <%- if @processing_jobs.any? -%>
+  	<% @jobs = @processing_jobs %>
+  	<%= render "/jobs/jobs" %>
+  <%- else -%>
+  	<p>No recently processing jobs</p>
+  <%- end -%>
+<% end %>
+  
+<%= section 'Recently failed jobs' do %>
+  <%- if @failed_jobs.any? -%>
+  	<% @jobs = @failed_jobs %>
+  	<%= render "/jobs/jobs" %>
+  <%- else -%>
+  	<p>No recently failed jobs</p>
+  <%- end -%>
+<% end %>
+  
+<div class="form-actions">
+  <%= link_to 'View all jobs', jobs_path, class: 'btn btn-small btn-primary' %>
+</div>
+

@@ -1,0 +1,53 @@
+<% title "View Job" %>
+
+<%- @jobs = [@job] -%>
+
+<%= render :partial => "jobs" %>
+
+<h2>History</h2>
+
+<table class="table">
+	<tr class="odd">
+		<th>State</th>
+		<th>Occurred</th>
+		<th>Message</th>
+	</tr>
+	<% for state_change in @job.state_changes %>
+		<tr>
+			<td>
+			  <%= state_label state_change.state %>
+			</td>
+			<td title="<%= I18n.l state_change.created_at %>">
+			  <%= time_ago_in_words state_change.created_at, :include_seconds => true %> ago
+			</td>
+			<td>
+			  <%= state_change.message %>
+
+			  <%- if state_change.deliveries.any? -%>
+  			  <span class="notifications">
+  			   <%= link_to pluralize(state_change.deliveries.size, 'notification'),
+  			               '#',
+  			               onclick: "$('#deliveries_#{state_change.id}').toggle()" %>
+  			  </span>
+			  <%- end -%>
+
+			</td>
+		</tr>
+
+	  <%- if state_change.deliveries.any? -%>
+	    <%= render :partial => "deliveries", :locals => {:state_change => state_change} %>
+		<%- end -%>
+	<% end %>
+
+</table>
+
+<h2>Notifications</h2>
+<%= render "notifications" %>
+
+<h2>Preset parameters</h2>
+<pre><%= @job.preset.parameters rescue 'Preset not found' %></pre>
+
+<% if @job.remote_job_id %>
+  <h2>Delete job</h2>
+  <%= link_to 'Delete job', api_job_path(@job), method: :delete, data: { confirm: 'Are you sure you want to delete this job?' }, class: 'btn btn-danger' %>
+<% end %>

@@ -1,0 +1,9 @@
+<% title 'Hosts' %>
+
+<%= section 'Hosts', class: 'hosts' do %>
+  <%= render @hosts %>
+<% end %>
+
+<div class="form-actions">
+  <%= link_to 'Add a host', new_host_path, class: 'btn btn-primary' %>
+</div>
