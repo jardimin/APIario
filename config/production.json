@@ -1,0 +1,7 @@
+{
+  "db": "localhost/APIario",
+  "emailer": {
+    "from": "contato@jardin.in"
+  },
+  "rootURL": "http://localhost:3001"
+}
