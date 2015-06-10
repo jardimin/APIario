@@ -15,7 +15,7 @@ models.User.create({
   models.OAuthClientsModel.create({
     clientId: '28471984739287473',
     clientSecret: '3947839820',
-    redirectUri: 'http://apartamentosnorio.novo:3000/oauth/callback'
+    redirectUri: 'http://localhost/teste/index.php'
   }, function() {
     process.exit();
   });

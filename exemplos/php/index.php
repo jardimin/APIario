@@ -6,7 +6,7 @@ require('GrantType/AuthorizationCode.php');
 const CLIENT_ID     = '28471984739287473';
 const CLIENT_SECRET = '3947839820';
 
-const REDIRECT_URI           = 'http://localhost/OAuth2/test.php';
+const REDIRECT_URI           = 'http://localhost/teste/index.php';
 const AUTHORIZATION_ENDPOINT = 'http://localhost:3001/oauth/authorise';
 const TOKEN_ENDPOINT         = 'http://localhost:3001/oauth/token';
 
