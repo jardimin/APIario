@@ -12,7 +12,7 @@ var express = require('express')
 //Define o ambiente padrão
 app.set('env', process.env.NODE_ENV || 'development');
 //Porta
-app.set('port', process.env.PORT || 3001);
+app.set('port', process.env.PORT || 3000);
 //Devine a pasta das views
 app.set('views', path.join(__dirname, 'views'));
 //Usa o Jade
@@ -93,4 +93,11 @@ app.get('/account', middleware.requiresUser, routes.users.show);
 app.post('/session', routes.session.create);
 app.get('/session', routes.session.show);
 
-module.exports = app;
+var http = require('http');
+http.createServer(app).listen(app.get('port'), function(){
+  console.log('APIario rodando na porta:', app.get('port'));
+});
+
+
+
+
