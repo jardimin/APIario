@@ -12,7 +12,7 @@ var express = require('express')
 //Define o ambiente padrão
 app.set('env', process.env.NODE_ENV || 'development');
 //Porta
-app.set('port', process.env.PORT || 3000);
+app.set('port', process.env.PORT || 3001);
 //Devine a pasta das views
 app.set('views', path.join(__dirname, 'views'));
 //Usa o Jade
