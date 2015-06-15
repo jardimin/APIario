@@ -5,7 +5,7 @@ common: &common
   pool: 5
   host: localhost
   username: root
-  password: 123
+  password: br0t01620
 
 development:
   <<: *common
