@@ -9,11 +9,18 @@ module.exports.create = function(req, res, next) {
 };
 //Rota para mostrar os dados do usuário
 module.exports.show = function(req, res, next) {
-  
-console.log(req.oauth.bearerToken.userId.toSource());
-  User.findOne({ email: req.oauth.bearerToken.userId.id}, function(err, user) {
+  User.findOne({ email: req.oauth.bearerToken.userId}, function(err, user) {
   	var id = user._id;
   	var email = user.email;
   	res.json({ id: id, email: email });
+  });
+};
+
+//Rota para mostrar os dados do usuário
+module.exports.account = function(req, res, next) {
+ User.findOne({ email: req.session.userId}, function(err, user) {
+    if (err) return next(err);
+    if (!user) return next(new errors.NotFound('User not found'));
+    res.render('account', { user: user });
   });
 };

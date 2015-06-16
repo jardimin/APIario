@@ -144,6 +144,7 @@ app.use(app.oauth.errorHandler());
 //app.post('/v1/users', routes.users.create);
 //Retorna os dados do usuário em JSON
 app.get('/me', middleware.requiresUser, routes.users.show);
+app.get('/account', middleware.requiresUser, routes.users.account);
 //Verifica autenticação
 app.get('/logged', middleware.requiresUser, function(req,res){
   //Retorna verdadeiro caso esteja logado
