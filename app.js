@@ -11,33 +11,39 @@ var express = require('express')
     ,fs = require('fs')
     ,Attachments = models.Attachments;
 
-//Define o ambiente padrão
-app.set('env', process.env.NODE_ENV || 'development');
-//Porta
-app.set('port', process.env.PORT || 3001);
-//Devine a pasta das views
-app.set('views', path.join(__dirname, 'views'));
-//Usa o Jade
-app.set('view engine', 'jade');
-app.use(express.cookieParser('ncie0fnft6wjfmgtjz8i'));
-app.use(express.cookieSession());
-
+//Domínios habilitados pelo Access Control Allow Origin
+var allowedDomains = [
+    'http://colmeia.teste'
+];
+//Chama o node-corls e seta os domínios habilitados
+var CORS = require('./node-cors/node-cors.js')(allowedDomains);
+//Título do Aplicativo
 app.locals.title = 'APIario';
 app.locals.pretty = true;
-
+//Configurações
 app.configure('development', 'production', function() {
+  //Define o ambiente padrão
+  app.set('env', process.env.NODE_ENV || 'development');
+  //Porta
+  app.set('port', process.env.PORT || 3001);
+  //Devine a pasta das views
+  app.set('views', path.join(__dirname, 'views'));
+  //Usa o Jade
+  app.set('view engine', 'jade');
+  app.use(express.cookieParser('ncie0fnft6wjfmgtjz8i'));
+  app.use(express.cookieSession());  
   app.use(express.logger('dev'));
+  //Seta o CORS na configuração
+  app.use(CORS);
+  app.use(express.bodyParser({ 
+    keepExtensions: true, 
+    //pasta do upload
+    uploadDir: __dirname + '/tmp'
+    //Limite de upload
+    //limit: '2mb'
+  }));
+  app.use(express.methodOverride());  
 });
-
-app.use(express.bodyParser({ 
-  keepExtensions: true, 
-  //pasta do upload
-  uploadDir: __dirname + '/tmp'
-  //Limite de upload
-  //limit: '2mb'
-}));
-
-app.use(express.methodOverride());
 
 //Configuração do OAuth2
 app.oauth = oauthserver({
