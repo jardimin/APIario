@@ -7,9 +7,9 @@ require('GrantType/RefreshToken.php');
 const CLIENT_ID     = '28471984739287473';
 const CLIENT_SECRET = '3947839820';
 
-const REDIRECT_URI           = 'http://colmeia.teste/php/index.php';
-const AUTHORIZATION_ENDPOINT = 'http://colmeia.teste:3001/oauth/authorise';
-const TOKEN_ENDPOINT         = 'http://colmeia.teste:3001/oauth/token';
+const REDIRECT_URI           = 'http://colmeia.teste/index.php';
+const AUTHORIZATION_ENDPOINT = 'http://colmeia.aovivonaweb.tv/oauth/authorise';
+const TOKEN_ENDPOINT         = 'http://colmeia.aovivonaweb.tv/oauth/token';
 const ACCESS_TOKEN_BEARER   = 1;
 
 $client = new OAuth2\Client(CLIENT_ID, CLIENT_SECRET);
@@ -20,7 +20,7 @@ if (isset($_GET['access_token'])) {
     //Define o tipo do token
     $client->setAccessTokenType(ACCESS_TOKEN_BEARER);
     //Verifica se está logado corretamente
-    $response = $client->fetch('http://colmeia.teste:3001/logged');
+    $response = $client->fetch('http://colmeia.aovivonaweb.tv/logged');
     //Caso o token esteja expirado usa o refresh token para recuperar
     if($response['result'] != '1') {
         $params = array('refresh_token' => $_GET['refresh_token']);
