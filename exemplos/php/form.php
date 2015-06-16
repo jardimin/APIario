@@ -2,7 +2,8 @@
 <html>
 <head>
 	<title>Upload</title>
-	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+	<link rel="stylesheet" href="/stylesheets/bootstrap.min.css">
+	<link rel="stylesheet" href="/stylesheets/style.css">	
 </head>
 <body>
 	<div class="container">
@@ -38,8 +39,8 @@
 			</div>
 		</div>
 	</div>
-    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+	<script src="/javascripts/jquery-1.9.1.min.js"></script>
+	<script src="/javascripts/bootstrap.min.js"></script>
 	<script>
 		$(function() {
 		  
@@ -58,12 +59,12 @@
 		    
 		    var xhr = new XMLHttpRequest();
 		    
-		    xhr.open('post', 'http://colmeia.teste:3001/upload', true);
+		    xhr.open('post', 'http://colmeia.aovivonaweb.tv/upload', true);
 		    //Access token para autenticação com a API
 		    xhr.setRequestHeader('Authorization','Bearer ' + $('#access_token').val());
 		    xhr.upload.onprogress = function(e) {
 		      if (e.lengthComputable) {
-		        var percentage = (e.loaded / e.total) * 100;
+		        var percentage = (e.loaded / e.total) * 100;		        
 		        $('div.progress div.bar').css('width', percentage + '%');
 		      }
 		    };
