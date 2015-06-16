@@ -19,6 +19,8 @@ module.exports.getAccessToken = function(bearerToken, callback) {
 
 //Salva o access token
 module.exports.saveAccessToken = function(token, clientId, expires, userId, callback) {
+  //Ajuste do bug
+  if (typeof userId.id != 'undefined') userId = userId.id;
   var fields = {
     clientId: clientId,
     userId: userId,

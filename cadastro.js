@@ -15,7 +15,7 @@ models.User.create({
   models.OAuthClientsModel.create({
     clientId: '28471984739287473', //Mantenha o mesmo clientID
     clientSecret: '3947839820', //Pode ser alterado dependendo do cliente
-    redirectUri: 'http://localhost/teste/index.php' //URL de retorno que também vai ser usado para informar que o vídeo está pronto
+    redirectUri: 'http://colmeia.teste/php/index.php' //URL de retorno que também vai ser usado para informar que o vídeo está pronto
   }, function() {
     process.exit();
   });
