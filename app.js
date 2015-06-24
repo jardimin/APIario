@@ -9,12 +9,16 @@ var express = require('express')
     ,oauthserver = require('node-oauth2-server')
     ,User = models.User
     ,fs = require('fs')
+    ,video = require('APIario-video')
     ,Attachments = models.Attachments;
 
 //Domínios habilitados pelo Access Control Allow Origin
 var allowedDomains = [
     'http://colmeia.teste'
 ];
+
+//var teste = new video({input: 'teset', output: 'teste', schedule: 'http://colmeia.aovivonaweb.tv:3000', user: 'colmeia', password: 'jbk401', callback: 'callback'}, function(call){
+//});
 //Chama o node-corls e seta os domínios habilitados
 var CORS = require('./node-cors/node-cors.js')(allowedDomains);
 //Título do Aplicativo
