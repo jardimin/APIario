@@ -16,10 +16,10 @@ describe('OAuth sign in', function() {
       .auth(clientCredentials, '')
       .send({
         grant_type: 'password',
-        username: 'suporte@haarieh.com',
+        username: 'contato@haarieh.com',
         password: 'Beavis',
         client_id: '28471984739287473',
-        client_secret: '3947839820'
+        client_secret: '3947839822'
       })
       .expect(200)
       .end(function(err, res) {
@@ -46,10 +46,10 @@ describe('OAuth sign in', function() {
       .auth(clientCredentials, '')
       .send({
         grant_type: 'refresh_token',
-        username: 'suporte@haarieh.com',
+        username: 'contato@haarieh.com',
         password: 'Beavis',
         client_id: '28471984739287473',
-        client_secret: '3947839820',
+        client_secret: '3947839822',
         refresh_token: refreshToken
       })
       .expect(200)

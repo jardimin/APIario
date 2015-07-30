@@ -1,7 +1,16 @@
 {
-  "db": "localhost/APIario-dev",
-  "emailer": {
-    "from": "contato@jardin.in"
-  },
-  "rootURL": "http://localhost:3001"
+	"db": "localhost/APIario-dev",
+	"emailer": {
+		"from": "contato@jardin.in"
+	},
+	"rootURL": "http://localhost:3001",
+	"upload": "/mnt/colmeia/upload/",
+	"video": {
+		"input": "teset", 
+		"output": "teste", 
+		"schedule": "http://colmeia.aovivonaweb.tv:3000", 
+		"user": "colmeia", 
+		"password": "jbk401", 
+		"callback": "callback"
+	}
 }

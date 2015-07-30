@@ -4,3 +4,4 @@ exports.index = function(req, res){
 
 exports.session = require('./session');
 exports.users = require('./users');
+exports.uploads = require('./uploads');

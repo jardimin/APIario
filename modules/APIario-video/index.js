@@ -1,42 +1,33 @@
-module.exports = function() {
-	//curl -d 'input=/mnt/colmeia/upload/55848166771b1695560ede4e/26520-7r7rl.mp4&output=/mnt/colmeia/upload/55848166771b1695560ede4e/26520-7r7rl/26520-7r7rl-x264-400k.mp4&preset=x264-400k' http://colmeia:jbk401@localhost:3000/api/jobs
+//Carrega os modulos do APIario
+var models = require('../../models');
+//Chama o jobs do módulo
+var jobs = require('./models/jobs');
 
+module.exports = function(args) {
+	//curl -d 'input=/mnt/colmeia/upload/55848166771b1695560ede4e/26520-7r7rl.mp4&output=/mnt/colmeia/upload/55848166771b1695560ede4e/26520-7r7rl/26520-7r7rl-x264-400k.mp4&preset=x264-400k' http://colmeia:jbk401@localhost:3000/api/jobs
 	var __constructor = function (args) {
-		// Verifica a existência das configurações
-		if (args.length == 0 )
+		// Verifica a existência dos 3 argumentos
+		if (args.length < 3 )
 			throw('Empty arguments');
-		if (args[0].input == undefined)
-			throw('Empty input');
-		if (args[0].output == undefined)
-			throw('Empty output');
-		if (args[0].schedule == undefined)
+		var app = args[0];
+		var middleware = args[1];
+		var config = args[2];
+		if (config.schedule == undefined)
 			throw('Empty codem schedule');
-		if (args[0].user == undefined)
+		if (config.user == undefined)
 			throw('Empty user');
-		if (args[0].password == undefined)
+		if (config.password == undefined)
 			throw('Empty password');
-		if (args[0].callback == undefined)
+		if (config.callback == undefined)
 			throw('Empty password');
-		//Vídeo a ser tratado
-		var input = args[0].input;
-		//Caminho do vídeo depois de tratado 
-		var output = args[0].output;
-		//Url do code-schedule
-		var schedule = args[0].schedule;
-		//Usuário de autenticação do schedule
-		var user = args[0].user;
-		//Senha de autenticação do schedule
-		var password = args[0].password;
-		//Url de retorno para avisar o status do processamento do schedule
-		var callback = args[0].callback;
+
 		//Busca os presets no Codem-Schedule
-		__presets(args[0],function(data){
+		__presets(config,function(data){
 			var presets = JSON.parse(data);
 			presets.forEach(function(preset, index) {
 				console.log(preset.name);
 			});
-			
-		});
+		});	
 	}
 
 	/**
@@ -77,7 +68,6 @@ module.exports = function() {
 		});
 		}, 60 * 1000);
 	}
-
 
 	return __constructor.call(this, arguments);
 }

@@ -3,5 +3,12 @@
   "emailer": {
     "from": "contato@jardin.in"
   },
-  "rootURL": "http://localhost:3001"
+  "rootURL": "http://localhost:3001",
+  "upload": "/mnt/colmeia/upload/",
+	"video": {
+		"schedule": "http://colmeia.aovivonaweb.tv:3000", 
+		"user": "colmeia", 
+		"password": "jbk401", 
+		"callback": "callback"
+	}  
 }

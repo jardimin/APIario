@@ -9,7 +9,7 @@ describe('Web sign in', function() {
     request(app)
       .post('/session')
       .send({
-        email: 'suporte@haarieh.com',
+        email: 'contato@haarieh.com',
         password: 'Beavis'
       })
       .end(function(err, res) {

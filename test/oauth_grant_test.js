@@ -8,7 +8,7 @@ describe('OAuth request auth code', function() {
   var authCode;
   var accessToken;
   var refreshToken;
-  var clientSecretBase64 = new Buffer('3947839820').toString('base64');
+  var clientSecretBase64 = new Buffer('3947839822').toString('base64');
   var clientCredentials = '28471984739287473' + clientSecretBase64;
   var cookies;
 
@@ -16,7 +16,7 @@ describe('OAuth request auth code', function() {
     request(app)
     .post('/session')
     .send({
-      email: 'suporte@haarieh.com',
+      email: 'contato@haarieh.com',
       password: 'Beavis'
     })
     .end(function (err, res) {
@@ -33,7 +33,7 @@ describe('OAuth request auth code', function() {
       .send({
         allow: 'yes',
         client_id: '28471984739287473',
-        client_secret: '3947839820',
+        client_secret: '3947839822',
         response_type: 'code',
         redirect_uri: '/oauth/redirect'
       })
@@ -55,7 +55,7 @@ describe('OAuth request auth code', function() {
         grant_type: 'authorization_code',
         code: authCode,
         client_id: '28471984739287473',
-        client_secret: '3947839820',
+        client_secret: '3947839822',
         refresh_token: refreshToken
       })
       .expect(200)
@@ -82,10 +82,10 @@ describe('OAuth request auth code', function() {
       .auth(clientCredentials, '')
       .send({
         grant_type: 'refresh_token',
-        username: 'suporte@haarieh.com',
+        username: 'contato@haarieh.com',
         password: 'Beavis',
         client_id: '28471984739287473',
-        client_secret: '3947839820',
+        client_secret: '3947839822',
         refresh_token: refreshToken
       })
       .expect(200)

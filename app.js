@@ -8,19 +8,9 @@ var express = require('express')
     ,app = express()
     ,oauthserver = require('node-oauth2-server')
     ,User = models.User
-    ,fs = require('fs')
-    ,video = require('APIario-video')
+    ,url = require('url')
     ,Attachments = models.Attachments;
 
-//Domínios habilitados pelo Access Control Allow Origin
-var allowedDomains = [
-    'http://colmeia.teste'
-];
-
-//var teste = new video({input: 'teset', output: 'teste', schedule: 'http://colmeia.aovivonaweb.tv:3000', user: 'colmeia', password: 'jbk401', callback: 'callback'}, function(call){
-//});
-//Chama o node-corls e seta os domínios habilitados
-var CORS = require('./node-cors/node-cors.js')(allowedDomains);
 //Título do Aplicativo
 app.locals.title = 'APIario';
 app.locals.pretty = true;
@@ -37,8 +27,6 @@ app.configure('development', 'production', function() {
   app.use(express.cookieParser('ncie0fnft6wjfmgtjz8i'));
   app.use(express.cookieSession());  
   app.use(express.logger('dev'));
-  //Seta o CORS na configuração
-  app.use(CORS);
   app.use(express.bodyParser({ 
     keepExtensions: true, 
     //pasta do upload
@@ -47,6 +35,40 @@ app.configure('development', 'production', function() {
     //limit: '2mb'
   }));
   app.use(express.methodOverride());  
+});
+
+
+//Domínios habilitados pelo Access Control Allow Origin
+//Retornados pelos Redirects cadastrados
+app.all('/*', function(req, res, next) {
+  //Não permite cache para qualquer tipo de ação
+  res.header('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
+  //Pega a origem
+  var origem = req.get('origin');
+  //Verifica se existe uma origem
+  if (typeof origem != 'undefined') {
+    //Verifica se a url de origem possui cadastro nos clients
+    models.OAuthClientsModel.find({redirectUri: new RegExp(origem, "i")}, function(err, clients){
+      //Caso aconteça erro aborta
+      if (err) throw err;
+      //Caso exista um cadastro habilita para permitir a URL
+      if (clients) {
+        clients.forEach(function(client, key){
+            //Pega o host
+            var host = url.parse(client.redirectUri).host;
+            //Pega o protocolo
+            var protocol = url.parse(client.redirectUri).protocol;
+            //Monta o domínio com http
+            var dominio = protocol + '//' + host;
+            //Seta no header permitindo o domínio
+            res.header("Access-Control-Allow-Origin", dominio);
+            res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+            res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Content-Length, X-Requested-With");
+            next();  
+        });
+      } else next();
+    });
+  } else next();
 });
 
 //Configuração do OAuth2
@@ -103,45 +125,8 @@ app.post('/oauth/authorise', function(req, res, next) {
   // The third param should for the user/uid (only used for passing to saveAuthCode)
   next(null, req.body.allow === 'yes', req.session.userId, null);
 }));
-
-//Envio dos vídeos, verifica se está autenticado anteriormente
-app.post('/upload', middleware.requiresUser, function(req, res) {
-  //Busca o usuário logado pelo seu userId(email)
-  User.findOne({ email: req.oauth.bearerToken.userId}, function(err, user) {
-    //Pega o Id do usuário logado pelo Auth
-    var id = user._id;
-    //Nome do arquivo após o upload
-    var oldFile = req.files.myFile.path;
-    //Pega o nome do arquivo
-    var nome = oldFile.split("/");  
-    nome = nome[nome.length - 1];
-    //Move este arquivo para a pasta do usuário 
-    var newFile = './tmp/' + id + '/' + nome; 
-    //Verifica a existência da pasta e cria a pasta do usuário com o seu Id
-    fs.exists('./tmp/' + id, function(exists) {      
-        if (!exists) fs.mkdir('./tmp/' + id);
-    });         
-    //Move o arquivo para a pasta destino
-    fs.readFile(oldFile , function(err, data) {
-        fs.writeFile(newFile, data, function(err) {
-            //Apaga o arquivo temporário
-            fs.unlink(oldFile, function(){            
-              if(err) throw err;
-              //Instancia o Attachments com os dados para salvar
-              var anexo = new Attachments({
-                file: newFile,
-                originalFilename: req.files.myFile.name,
-                user: user._id
-              });
-              //Salva os dados
-              anexo.save(function(e){
-                if(e == null) res.send("File uploaded to: " + newFile);
-              });                
-            });
-        }); 
-    });  
-  }); 
-});
+//Uploads de arquivos qualquer
+app.post('/upload', middleware.requiresUser, routes.uploads.send);
 
 app.use(app.oauth.errorHandler());
 //Habilita caso queira cadastrar usuários
@@ -158,6 +143,9 @@ app.get('/logged', middleware.requiresUser, function(req,res){
 app.post('/session', routes.session.create);
 //Mostra a tela de login
 app.get('/session', routes.session.show);
+
+//Carregando Módulos
+var video = require('./modules/APIario-video')(app, middleware, config.video);
 
 var http = require('http');
 http.createServer(app).listen(app.get('port'), function(){
