@@ -10,6 +10,8 @@ Para cadastrar um usuário use "node cadastro.js" e insira os dados solicitados 
  * `Senha` -- Senha do usuário
  * `URL de redirecionamento` -- URL de redirecionamento
 
+Após o cadastro vai ser fornecido o ClientID e ClientSecret automaticamente pelo sistema.
+
 Caso esteja usando o Módulo do Drupal a URL fica da seguinte forma:
 
 http://sitedodrupal/admin/config/apiario/settings
