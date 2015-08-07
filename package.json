@@ -26,7 +26,6 @@
     "express": "^3.4.8",
     "inquirer": "^0.9.0",
     "jade": "*",
-    "json-schema-to-mongoose": "^0.2.1",
     "mongoose": "3.8",
     "node-oauth2-server": "^2.0.2",
     "oauth2-server": "~2.4.0",
