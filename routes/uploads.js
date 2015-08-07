@@ -1,9 +1,15 @@
 var User = require('./../models').User;
+var Utils = require('./../lib/utils');
 var Attachments = require('./../models').Attachments;
+var jobs = require('./../modules/APIario-video/models/jobs');
 var errors = require('./../errors');
 var config = require('./../config');
 var fs = require('fs');
-//Rota para mostrar os dados do usuário
+
+
+/**
+ * Rota para mostrar os dados do usuário
+ **/
 module.exports.send = function(req, res, next) {
   //Busca o usuário logado pelo seu userId(email)
   User.findOne({ email: req.oauth.bearerToken.userId}, function(err, user) {
@@ -34,10 +40,36 @@ module.exports.send = function(req, res, next) {
               });
               //Salva os dados
               anexo.save(function(e){
-                if(e == null) res.json({id: anexo.id});
+                if(e == null) {
+                  //Carregando módulo do vídeo e criando job
+                  var video = require('../modules/APIario-video')(anexo, config.video);
+                  //Retorna o id do anexo salvo
+                  res.json({id: anexo.id});
+                }
               });                
             });
         }); 
     });  
   }); 
+};
+
+/**
+ * Rota que recebe a notificação do codem-schedule sobre os vídeos
+ * Essa função funciona somente local, hosts externos não deve funcionar
+ **/
+module.exports.notify = function(req, res, next) {
+  //Recebe os Ips da máquina local
+  var ips = Utils.getIPAddresses();
+  //Verifica se o POST foi dado da máquina local
+  if(ips.indexOf(req.headers['x-forwarded-for']) > -1) {
+    //Transforma o retorno em objeto
+    var post = JSON.parse(req.body);
+    //Busca o jobs na base interna
+    jobs.findOne({ "schedule.id": post.id}, function (err, job){
+      //Salva o schedule novamente com novo status e mensagens
+      job.schedule = post;
+      job.save();
+      next();
+    });
+  } else res.send('Não autorizado!');
 };

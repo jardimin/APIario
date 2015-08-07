@@ -9,6 +9,8 @@
 		"schedule": "http://colmeia.aovivonaweb.tv:3000", 
 		"user": "colmeia", 
 		"password": "jbk401", 
-		"callback": "callback"
+		"callback": "callback",
+		"notify": "http://colmeia.aovivonaweb.tv/notify",
+		"interface": "eth0"
 	}  
 }

@@ -143,9 +143,8 @@ app.get('/logged', middleware.requiresUser, function(req,res){
 app.post('/session', routes.session.create);
 //Mostra a tela de login
 app.get('/session', routes.session.show);
-
-//Carregando Módulos
-var video = require('./modules/APIario-video')(app, middleware, config.video);
+//Notificações da codem-schedule 
+app.post('/notify', routes.uploads.notify);
 
 var http = require('http');
 http.createServer(app).listen(app.get('port'), function(){

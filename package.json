@@ -5,7 +5,7 @@
   "scripts": {
     "start": "./node_modules/.bin/nodemon server.js",
     "test": "./node_modules/.bin/mocha -R spec test/init.js test/**/*_test.js"
-  },  
+  },
   "keywords": [
     "APIario"
   ],
@@ -21,21 +21,22 @@
   ],
   "main": "app.js",
   "dependencies": {
-    "codem-transcode": "~0.5.7",
-    "oauth2-server": "~2.4.0",
-    "express": "^3.4.8",
-    "jade": "*",
-    "node-oauth2-server": "^2.0.2",
-    "mongoose": "3.8",
     "bcrypt": "^0.7.7",
+    "codem-transcode": "~0.5.7",
+    "express": "^3.4.8",
     "inquirer": "^0.9.0",
+    "jade": "*",
+    "json-schema-to-mongoose": "^0.2.1",
+    "mongoose": "3.8",
+    "node-oauth2-server": "^2.0.2",
+    "oauth2-server": "~2.4.0",
     "uniqid": "^1.0.0"
   },
   "devDependencies": {
     "supertest": "^0.9.0",
     "mocha": "^1.17.1",
     "nodemon": "^1.0.15",
-    "should": "^3.3.0"    
+    "should": "^3.3.0"
   },
   "engines": {
     "node": ">=0.10"
