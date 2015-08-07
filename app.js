@@ -52,7 +52,7 @@ app.all('/*', function(req, res, next) {
       //Caso aconteça erro aborta
       if (err) throw err;
       //Caso exista um cadastro habilita para permitir a URL
-      if (clients) {
+      if (clients.length > 0) {
         clients.forEach(function(client, key){
             //Pega o host
             var host = url.parse(client.redirectUri).host;
@@ -143,6 +143,7 @@ app.get('/logged', middleware.requiresUser, function(req,res){
 app.post('/session', routes.session.create);
 //Mostra a tela de login
 app.get('/session', routes.session.show);
+
 //Notificações da codem-schedule 
 app.post('/notify', routes.uploads.notify);
 
