@@ -9,14 +9,11 @@ var express = require('express')
     ,oauthserver = require('node-oauth2-server')
     ,User = models.User
     ,url = require('url')
-    ,cors = require('cors')
     ,Attachments = models.Attachments;
 
 //Título do Aplicativo
 app.locals.title = 'APIario';
 app.locals.pretty = true;
-
-
 
 //Configurações
 app.configure('development', 'production', function() {
