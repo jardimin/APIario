@@ -63,7 +63,12 @@ app.all('/*', function(req, res, next) {
             //Seta no header permitindo o domínio
             res.header("Access-Control-Allow-Origin", dominio);
             res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
-            res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Content-Length, X-Requested-With");
+            //res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Content-Length, X-Requested-With");
+            res.header("Access-Control-Allow-Headers", "token, origin, content-type, accept, authorization, X-Requested-With");
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Max-Age", "1209600");
+            
+            
             next();  
         });
       } else next();
