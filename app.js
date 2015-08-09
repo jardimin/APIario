@@ -9,15 +9,11 @@ var express = require('express')
     ,oauthserver = require('node-oauth2-server')
     ,User = models.User
     ,url = require('url')
-    ,cors = require('cors')
     ,Attachments = models.Attachments;
 
 //Título do Aplicativo
 app.locals.title = 'APIario';
 app.locals.pretty = true;
-
-
-
 //Configurações
 app.configure('development', 'production', function() {
   //Define o ambiente padrão
@@ -39,8 +35,43 @@ app.configure('development', 'production', function() {
     //limit: '2mb'
   }));
   app.use(express.methodOverride());  
-  app.use(cors());
 });
+
+
+//Domínios habilitados pelo Access Control Allow Origin
+//Retornados pelos Redirects cadastrados
+var dominios = new Array();
+models.OAuthClientsModel.find({}, function(err, clients) {
+  //Caso aconteça erro aborta
+  if (err) throw err;
+  //Caso exista um cadastro habilita para permitir a URL
+  if (clients.length > 0) {
+    clients.forEach(function(client, key){
+        //Pega o host
+        var host = url.parse(client.redirectUri).host;
+        //Pega o protocolo
+        var protocol = url.parse(client.redirectUri).protocol;
+        //Monta o domínio com http
+        var dominio = protocol + '//' + host;
+        //Seta no header permitindo o domínio
+        dominios.push(dominio);
+     });
+  }
+});
+
+//Faz a checagem se o domínio encontra-se habilitado
+app.all('*', function(req, res, next) {
+  var origem = req.get('origin');
+  if(dominios.indexOf(origem) > -1) {
+    res.header("Access-Control-Allow-Origin", origem);
+    res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+    res.header("Access-Control-Allow-Headers", "token, origin, content-type, accept, authorization, X-Requested-With");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Max-Age", "1209600");    
+    next();
+  } else next();
+});
+
 
 //Configuração do OAuth2
 app.oauth = oauthserver({
