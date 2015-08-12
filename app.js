@@ -89,9 +89,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 //Tratamento de erros
 app.use(function(err, req, res, next) {
   if (middleware.isValidationError(err)) {
+    console.log(err);
     res.status(400);
     res.send(err.errors);
   } else {
+    console.log(err);
     res.status(err.code || 500);
     res.send('Error');
   }

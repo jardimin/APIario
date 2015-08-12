@@ -55,21 +55,23 @@ module.exports.send = function(req, res, next) {
 
 /**
  * Rota que recebe a notificação do codem-schedule sobre os vídeos
- * Essa função funciona somente local, hosts externos não deve funcionar
+ * Essa função funciona somente local, hosts externos são negados
  **/
 module.exports.notify = function(req, res, next) {
   //Recebe os Ips da máquina local
   var ips = Utils.getIPAddresses();
+  var origin = req.headers['x-forwarded-for'] ||
+     req.connection.remoteAddress ||
+     req.socket.remoteAddress ||
+     req.connection.socket.remoteAddress;
   //Verifica se o POST foi dado da máquina local
-  if(ips.indexOf(req.headers['x-forwarded-for']) > -1) {
-    //Transforma o retorno em objeto
-    var post = JSON.parse(req.body);
+  if(ips.indexOf(origin) > -1) {
     //Busca o jobs na base interna
-    jobs.findOne({ "schedule.id": post.id}, function (err, job){
+    jobs.findOne({ "schedule.id": req.body.id}, function (err, job){
       //Salva o schedule novamente com novo status e mensagens
-      job.schedule = post;
+      job.schedule = req.body;
       job.save();
-      next();
+      res.send('Sucesso!');
     });
-  } else res.send('Não autorizado!');
+  } else res.status(403).send('Não autorizado');
 };
