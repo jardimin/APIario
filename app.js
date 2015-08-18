@@ -1,6 +1,7 @@
 //Declaração de variáveis
 var express = require('express')
     ,routes = require('./routes')
+    ,routesVideo = require('./modules/APIario-video/routes')
     ,config = require('./config')
     ,path = require('path')
     ,models = require('./models')
@@ -149,7 +150,7 @@ app.post('/session', routes.session.create);
 app.get('/session', routes.session.show);
 
 //Notificações da codem-schedule 
-app.post('/notify', routes.uploads.notify);
+app.post('/notify', routesVideo.notify);
 
 var http = require('http');
 http.createServer(app).listen(app.get('port'), function(){
