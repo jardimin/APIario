@@ -25,6 +25,8 @@ module.exports.send = function(req, res, next) {
     //Verifica a existência da pasta e cria a pasta do usuário com o seu Id
     fs.exists(config.upload + id, function(exists) {      
         if (!exists) fs.mkdir(config.upload + id);
+        //Permissão de escrita na pasta
+        fs.chmod(config.upload + id, '0777');
     });         
     //Move o arquivo para a pasta destino
     fs.readFile(oldFile , function(err, data) {
@@ -32,6 +34,8 @@ module.exports.send = function(req, res, next) {
             //Apaga o arquivo temporário
             fs.unlink(oldFile, function(err){            
               if(err) throw err;
+              //Permissão de escrita no arquivo
+              fs.chmod(newFile, '0777');
               //Instancia o Attachments com os dados para salvar
               var anexo = new Attachments({
                 file: newFile,
