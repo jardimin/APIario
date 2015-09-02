@@ -19,3 +19,8 @@ http://sitedodrupal/admin/config/apiario/settings
 O aplicativo APIario e o codem-schedule serão iniciado junto com o nginx usando passenger. Para saber como está os processos usa-se "passenger-status". O codem-schedule deverá usar autenticação htpasswd.
 
 Detalhes http://pad.jardim.in/p/video-publisher
+
+https://www.drupal.org/project/services
+https://www.drupal.org/project/oauth
+https://www.drupal.org/project/libraries
+https://www.drupal.org/project/ctools

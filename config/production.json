@@ -10,7 +10,6 @@
 		"user": "colmeia", 
 		"password": "jbk401", 
 		"callback": "callback",
-		"notify": "http://colmeia.aovivonaweb.tv/notify",
-		"interface": "eth0"
+		"notify": "http://colmeia.aovivonaweb.tv/notify"
 	}  
 }

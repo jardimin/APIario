@@ -152,6 +152,38 @@ app.get('/session', routes.session.show);
 //Notificações da codem-schedule 
 app.post('/notify', routesVideo.notify);
 
+
+var request = require('request');
+var key = 'ohkWHAEu3mU6vitWjfoykvG3NDsk3Atg';
+var secret = 'gSFGZLMYL4SJbVCRNXm9Yu4rMuX5cuLW';
+
+/*request(
+{ 
+  method: 'PUT',
+  uri: 'http://anonimo.novo/api/node/24.json',
+  form: {
+    status: 1,
+    apiario_status: {
+      und: [{value: "Executando"}]
+    }
+  },
+  oauth: { 
+    consumer_key: key,
+    consumer_secret: secret,
+    signature_method : 'PLAINTEXT'
+  },
+  gzip: true
+}
+, function (error, response, body) {
+  if(error) throw(error);
+  console.log(body);
+});*/
+//55e513928b6bdbeb0fad035e
+
+
+
+
+
 var http = require('http');
 http.createServer(app).listen(app.get('port'), function(){
   console.log('APIario rodando na porta:', app.get('port'));
