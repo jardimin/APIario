@@ -1,5 +1,6 @@
 var request = require('request');
 var config = require('./../../../config');
+
 var uri = 'http://anonimo.novo/api';
 var key = 'ohkWHAEu3mU6vitWjfoykvG3NDsk3Atg';
 var secret = 'gSFGZLMYL4SJbVCRNXm9Yu4rMuX5cuLW';

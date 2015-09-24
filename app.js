@@ -107,6 +107,20 @@ app.get('/', middleware.loadUser, routes.index);
 app.all('/oauth/token', app.oauth.grant());
 //Usado para solicitar autorização para utilizar a API
 app.get('/oauth/authorise', function(req, res, next) {
+
+//require cyrpto module
+var crypto=require('crypto');
+//key and iv should be same as the one in encrypt.php
+var decipher=crypto.createDecipheriv('aes-256-cbc','47264967364586938365849622647588','8672646567572920');
+//since we have already added padding while encrypting, we will set autopadding of node js to false.
+decipher.setAutoPadding(false); 
+// copy the output of encrypt.php and paste it below
+var cipherHexText256=req.query.drupal; 
+var dec = decipher.update(cipherHexText256,'hex','utf8');
+//decrypted data is stored in dec
+dec += decipher.final('utf8');
+console.log(dec);
+
   if (!req.session.userId) {
     return res.redirect('/session?redirect=' + req.path + '&client_id=' +
       req.query.client_id + '&redirect_uri=' + req.query.redirect_uri);
@@ -141,6 +155,7 @@ app.get('/me', middleware.requiresUser, routes.users.show);
 app.get('/account', middleware.requiresUser, routes.users.account);
 //Verifica autenticação
 app.get('/logged', middleware.requiresUser, function(req,res){
+  console.log(req.user.id);
   //Retorna verdadeiro caso esteja logado
   res.send("true");
 });
@@ -151,38 +166,6 @@ app.get('/session', routes.session.show);
 
 //Notificações da codem-schedule 
 app.post('/notify', routesVideo.notify);
-
-
-var request = require('request');
-var key = 'ohkWHAEu3mU6vitWjfoykvG3NDsk3Atg';
-var secret = 'gSFGZLMYL4SJbVCRNXm9Yu4rMuX5cuLW';
-
-/*request(
-{ 
-  method: 'PUT',
-  uri: 'http://anonimo.novo/api/node/24.json',
-  form: {
-    status: 1,
-    apiario_status: {
-      und: [{value: "Executando"}]
-    }
-  },
-  oauth: { 
-    consumer_key: key,
-    consumer_secret: secret,
-    signature_method : 'PLAINTEXT'
-  },
-  gzip: true
-}
-, function (error, response, body) {
-  if(error) throw(error);
-  console.log(body);
-});*/
-//55e513928b6bdbeb0fad035e
-
-
-
-
 
 var http = require('http');
 http.createServer(app).listen(app.get('port'), function(){
