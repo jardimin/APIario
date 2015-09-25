@@ -11,7 +11,12 @@ var OAuthUsersSchema = new Schema({
   password_reset_token: { type: String, unique: true },
   reset_token_expires: Date,
   firstname: String,
-  lastname: String
+  lastname: String,
+  drupal: {
+    key: String,
+    secret: String,
+    callback: String
+  }  
 });
 
 //Função para criptografar a senha do usuário

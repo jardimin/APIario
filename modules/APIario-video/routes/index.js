@@ -2,6 +2,7 @@ var Utils = require('./../lib/utils');
 var jobs = require('./../models/jobs');
 var config = require('./../../../config');
 var video = require('../index.js');
+var request = require('request');
 /**
  * Rota que recebe a notificação do codem-schedule sobre os vídeos
  * Essa função funciona somente local, hosts externos são negados
@@ -27,7 +28,9 @@ exports.notify = function(req, res, next) {
           //Faz a contagem dos vídeos baseado no job
           jobs.count({"schedule.state": 'success', "attachments": job.attachments},function(err,count){
             //Caso a quantidade de presets for a quantidade de vídeos com sucesso os Vídeos estão prontos
-            if(presets == count) console.log('Concluído os vídeos');
+            if(presets == count) {
+              console.log('Concluído os vídeos');
+            }
           });          
         });
       }

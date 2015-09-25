@@ -1,9 +1,19 @@
 var request = require('request');
 var config = require('./../../../config');
+var models = require('./../../../models');
+var jobs = require('./../models/jobs');
 
 var uri = 'http://anonimo.novo/api';
 var key = 'ohkWHAEu3mU6vitWjfoykvG3NDsk3Atg';
 var secret = 'gSFGZLMYL4SJbVCRNXm9Yu4rMuX5cuLW';
+
+models.Attachments.findOne({ "_id": '55d20af7c139212c31fe0c89'})
+.populate('user')
+.exec(function (err, value) {   
+  console.log(value);
+
+});
+
 
 request(
 { 

@@ -6,11 +6,7 @@ var authorizedClientIds = new Array();
 var OAuthClientsSchema = new Schema({
   clientId: String,
   clientSecret: String,
-  redirectUri: String,
-  drupal: {
-    key: String,
-    secret: String
-  }
+  redirectUri: String
 });
 
 //Retorna o client

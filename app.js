@@ -10,6 +10,7 @@ var express = require('express')
     ,oauthserver = require('node-oauth2-server')
     ,User = models.User
     ,url = require('url')
+    ,crypto = require('crypto')
     ,Attachments = models.Attachments;
 
 //Título do Aplicativo
@@ -39,6 +40,20 @@ app.configure('development', 'production', function() {
 });
 
 
+/**
+ * Função para retornar o domínio com o seu protocolo
+ * @param value String URL 
+ * @return String
+ **/
+var getDominio = function(value) {
+  //Pega o host
+  var host = url.parse(value).host;
+  //Pega o protocolo
+  var protocol = url.parse(value).protocol;
+  //Monta o domínio com http
+  return protocol + '//' + host;  
+}
+
 //Domínios habilitados pelo Access Control Allow Origin
 //Retornados pelos Redirects cadastrados
 var dominios = new Array();
@@ -48,12 +63,7 @@ models.OAuthClientsModel.find({}, function(err, clients) {
   //Caso exista um cadastro habilita para permitir a URL
   if (clients.length > 0) {
     clients.forEach(function(client, key){
-        //Pega o host
-        var host = url.parse(client.redirectUri).host;
-        //Pega o protocolo
-        var protocol = url.parse(client.redirectUri).protocol;
-        //Monta o domínio com http
-        var dominio = protocol + '//' + host;
+        var dominio = getDominio(client.redirectUri);
         //Seta no header permitindo o domínio
         dominios.push(dominio);
      });
@@ -107,20 +117,6 @@ app.get('/', middleware.loadUser, routes.index);
 app.all('/oauth/token', app.oauth.grant());
 //Usado para solicitar autorização para utilizar a API
 app.get('/oauth/authorise', function(req, res, next) {
-
-//require cyrpto module
-var crypto=require('crypto');
-//key and iv should be same as the one in encrypt.php
-var decipher=crypto.createDecipheriv('aes-256-cbc','47264967364586938365849622647588','8672646567572920');
-//since we have already added padding while encrypting, we will set autopadding of node js to false.
-decipher.setAutoPadding(false); 
-// copy the output of encrypt.php and paste it below
-var cipherHexText256=req.query.drupal; 
-var dec = decipher.update(cipherHexText256,'hex','utf8');
-//decrypted data is stored in dec
-dec += decipher.final('utf8');
-console.log(dec);
-
   if (!req.session.userId) {
     return res.redirect('/session?redirect=' + req.path + '&client_id=' +
       req.query.client_id + '&redirect_uri=' + req.query.redirect_uri);
@@ -139,6 +135,27 @@ app.post('/oauth/authorise', function(req, res, next) {
   }
   next();
 }, app.oauth.authCodeGrant(function(req, next) {
+  var dominio = getDominio(req.query.redirect_uri)      
+  //Verifica se é drupal
+  if (typeof req.query.drupal != "undefined") {
+    //Descriptografa key e secret
+    //Chave e IV mesmo enviado
+    var decipher=crypto.createDecipheriv('aes-256-cbc','47264967364586938365849622647588','8672646567572920');
+    decipher.setAutoPadding(false);     
+    var cipherHexText256=req.query.drupal; 
+    var dec = decipher.update(cipherHexText256,'hex','utf8');
+    dec += decipher.final('utf8');
+    var drupal = dec.split("|");
+    //Busca o usuário logado
+    models.User.findOne({email:req.session.userId}, function(err, user) {
+      //Seta o drupal key e secret
+      user.drupal.key = drupal[1];
+      user.drupal.secret = drupal[2];
+      user.drupal.callback = dominio;
+      //Salva
+      user.save();
+    });
+  }
   // The first param should to indicate an error
   // The second param should a bool to indicate if the user did authorise the app
   // The third param should for the user/uid (only used for passing to saveAuthCode)
@@ -155,7 +172,6 @@ app.get('/me', middleware.requiresUser, routes.users.show);
 app.get('/account', middleware.requiresUser, routes.users.account);
 //Verifica autenticação
 app.get('/logged', middleware.requiresUser, function(req,res){
-  console.log(req.user.id);
   //Retorna verdadeiro caso esteja logado
   res.send("true");
 });
@@ -166,6 +182,81 @@ app.get('/session', routes.session.show);
 
 //Notificações da codem-schedule 
 app.post('/notify', routesVideo.notify);
+
+
+
+
+var getUid = function(uri, key, secret, apiario_codigo, callback) {
+  request(
+  {
+    method: 'GET',
+    uri: uri + '/api/entity_node?fields=nid&parameters[apiario_codigo]=' + apiario_codigo,
+    oauth: { 
+      consumer_key: key,
+      consumer_secret: secret,
+      signature_method : 'PLAINTEXT'
+    },
+    gzip: true
+  }
+  , function (error, response, data) {
+    if(error) throw(error);
+    if(response.statusCode == 200) {
+      if(data != '["No entities found."]') {
+        var nodes = JSON.parse(data);
+        //Loop para pegar o código do vídeo
+        nodes.forEach(function(node, index) {
+          callback(node.nid);
+        });    
+      }
+    }
+  });
+}
+
+var setStatus = function(uri, key, secret, uid, callback) {
+  request(
+  { 
+    method: 'PUT',
+    uri: uri + '/api/entity_node/'+uid+'.json',
+    form: {
+      status: 1,
+      apiario_status: 'Novamente'
+    },
+    oauth: { 
+      consumer_key: key,
+      consumer_secret: secret,
+      signature_method : 'PLAINTEXT'
+    },
+    gzip: true
+  }
+  , function (error, response, data) {
+    if(error) throw(error);
+    if(response.statusCode == 200) callback();
+  });
+}
+
+var request = require('request');
+/*
+var uri = 'http://anonimo.novo/api';55d20af7c139212c31fe0c89
+var key = 'ohkWHAEu3mU6vitWjfoykvG3NDsk3Atg';
+var secret = 'gSFGZLMYL4SJbVCRNXm9Yu4rMuX5cuLW';*/
+var api_codigo = '55e513928b6bdbeb0fad035e';
+models.Attachments.findOne({ "_id": api_codigo}, function (err, ath) {  
+  models.User.findOne({"_id": ath.user}, function (err2, user){
+    var key = user.drupal.key;
+    var secret = user.drupal.secret;
+    var callback = user.drupal.callback;
+    getUid(callback, key, secret, api_codigo,function(uid) {
+      setStatus(callback, key, secret, api_codigo, function(){
+
+      });      
+    })
+
+
+  });
+});
+
+
+
 
 var http = require('http');
 http.createServer(app).listen(app.get('port'), function(){
