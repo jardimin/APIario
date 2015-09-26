@@ -3,6 +3,7 @@ var jobs = require('./../models/jobs');
 var config = require('./../../../config');
 var video = require('../index.js');
 var request = require('request');
+var drupal = require('../lib/drupal')
 /**
  * Rota que recebe a notificação do codem-schedule sobre os vídeos
  * Essa função funciona somente local, hosts externos são negados
@@ -29,11 +30,13 @@ exports.notify = function(req, res, next) {
           jobs.count({"schedule.state": 'success', "attachments": job.attachments},function(err,count){
             //Caso a quantidade de presets for a quantidade de vídeos com sucesso os Vídeos estão prontos
             if(presets == count) {
+              drupal.drupal(job.attachments, 'Concluído com sucesso!', true , function(){});
               console.log('Concluído os vídeos');
             }
           });          
         });
       }
+      drupal.drupal(job.attachments, req.body.state, false, function(){});
       //Salva o schedule novamente com novo status e mensagens
       job.schedule = req.body;
       job.save();
