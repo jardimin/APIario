@@ -4,7 +4,6 @@ var config = require('./../../../config').video;
 var path = require('path');
 var video = require('../index');
 
-
 /**
  * Método construtor onde busca o usuário através do anexo e captura o key e secret
  * busca o UID e seta o status

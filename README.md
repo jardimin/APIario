@@ -18,9 +18,16 @@ http://sitedodrupal/admin/config/apiario/settings
 
 O aplicativo APIario e o codem-schedule serão iniciado junto com o nginx usando passenger. Para saber como está os processos usa-se "passenger-status". O codem-schedule deverá usar autenticação htpasswd.
 
-Detalhes http://pad.jardim.in/p/video-publisher
+Os Presets no codem-schedule devem ser cadastrados da seguinte forma "x264-tamanho":
+ * x264-1M
+ * x264-2M
+ * x264-400k
 
-https://www.drupal.org/project/services
-https://www.drupal.org/project/oauth
-https://www.drupal.org/project/libraries
-https://www.drupal.org/project/ctools
+A APIario retorna a URL baseado no módulo kaltura do nginx: https://github.com/kaltura/nginx-vod-module
+
+Ex:
+ * http://colmeia.aovivonaweb.tv:8090/55c54ffc6801a6a869443e52/x264-,400k,1M,2M,-31483-zovdig.mp4.urlset/master.m3u8
+
+x264-,tamanho1,tamanho2,tamanho3
+
+Detalhes http://pad.jardim.in/p/video-publisher
