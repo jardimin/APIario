@@ -183,7 +183,6 @@ app.get('/session', routes.session.show);
 //Notificações da codem-schedule 
 app.post('/notify', routesVideo.notify);
 
-
 var http = require('http');
 http.createServer(app).listen(app.get('port'), function(){
   console.log('APIario rodando na porta:', app.get('port'));

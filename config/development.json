@@ -7,6 +7,7 @@
 	"upload": "/mnt/colmeia/upload/",
 	"video": {
 		"schedule": "http://colmeia.aovivonaweb.tv:3000", 
+		"urlVideo": "http://colmeia.aovivonaweb.tv:8090",
 		"user": "colmeia", 
 		"password": "jbk401", 
 		"callback": "callback",

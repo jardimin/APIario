@@ -36,6 +36,7 @@ exports.notify = function(req, res, next) {
           });          
         });
       }
+      
       drupal.drupal(job.attachments, req.body.state, false, function(){});
       //Salva o schedule novamente com novo status e mensagens
       job.schedule = req.body;
