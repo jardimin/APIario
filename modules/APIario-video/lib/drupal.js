@@ -2,6 +2,8 @@ var request = require('request');
 var models = require('./../../../models');
 var config = require('./../../../config').video;
 var path = require('path');
+var video = require('../index');
+
 
 /**
  * Método construtor onde busca o usuário através do anexo e captura o key e secret
@@ -82,35 +84,62 @@ var getUid = function(options, callback) {
 }
 
 /**
+ * Cria o Form de retorno e também a URL do vídeo baseado nos presets
+ * @param options json
+ * @param callback function
+ **/
+var getForm = function(options, callback) {
+  //Seta as variáveis
+  var name = '';
+  var init = '';
+  //Cria o formulário para envio das informações
+  //Verifica se o pub(publicar) está ativado
+  if(options.pub == true) {
+    //Busca os presets para capturar os nomes 
+    video.presets(config, function(data){
+      var presets = JSON.parse(data);
+      //Loop em cada preset para criar o job
+      presets.forEach(function(preset, index) {
+        //Pega os tamanhos do vídeo
+        name = name + preset.name.split('-')[1] + ',';
+        //Nome Inicial
+        init = preset.name.split('-')[0];
+      });
+      //URL de exemplo
+      //http://colmeia.aovivonaweb.tv:8090/55c54ffc6801a6a869443e52/x264-,400k,1M,2M,-31483-zovdig.mp4.urlset/master.m3u8
+      var file = path.basename(options.file);
+      //Cria a url do vídeo
+      var urlVideo = config.urlVideo + '/' + options.idUser + '/'+ init +'-,'+ name +'-' + file + '.urlset/master.m3u8';
+      //Retorna
+      callback({ status: 1, apiario_status: options.status, apiario_url_video: urlVideo });
+    });
+  } else callback({ apiario_status: options.status });
+}
+
+/**
  * Seta o status no Drupal usando o key e secret enviado pelo Drupal
  * @param options json
  * @param callback function
  **/
 var setStatus = function(options, callback) {
-  //Cria o formulário para envio das informações
-  //Verifica se o pub(publicar) está ativado
-  if(options.pub == true) {
-    //http://colmeia.aovivonaweb.tv:8090/55c54ffc6801a6a869443e52/x264-,400k,1M,2M,-31483-zovdig.mp4.urlset/master.m3u8
-    var file = path.basename(options.file);
-    var urlVideo = config.urlVideo + '/' + options.idUser + '/x264-,400k,1M,2M,-' + file + '.urlset/master.m3u8';
-    var form = { status: 1, apiario_status: options.status, apiario_url_video: urlVideo }    
-  } else var form = { apiario_status: options.status }
-  //Envia as informações para alteração do status
-  request(
-  { 
-    method: 'PUT',
-    uri: options.uri + '/api/entity_node/'+options.uid+'.json',
-    form: form,
-    oauth: { 
-      consumer_key: String(options.key),
-      consumer_secret: String(options.secret),
-      signature_method : 'PLAINTEXT'
-    },
-    gzip: true
-  }
-  , function (error, response, data) {
-    if(error) throw(error);
-    if(response.statusCode == 200) callback();
+  getForm(options, function(form){
+    //Envia as informações para alteração do status
+    request(
+    { 
+      method: 'PUT',
+      uri: options.uri + '/api/entity_node/'+options.uid+'.json',
+      form: form,
+      oauth: { 
+        consumer_key: String(options.key),
+        consumer_secret: String(options.secret),
+        signature_method : 'PLAINTEXT'
+      },
+      gzip: true
+    }
+    , function (error, response, data) {
+      if(error) throw(error);
+      if(response.statusCode == 200) callback();
+    });
   });
 }
 
