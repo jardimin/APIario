@@ -29,11 +29,11 @@ var init = function (anexo, config) {
 	});
 	//Levanta a instância e manda rodar pela imagem
 	ec2("RunInstances", {
-	  ImageId: config.awsimageid,
-	  KeyName: config.awskeyname,
-	  instanceType: config.awsinstance,
-	  MinCount: 1, 
-	  MaxCount: 1
+	  "ImageId": config.awsimageid,
+	  "KeyName": config.awskeyname,
+	  "InstanceType": config.awsinstance,
+	  "MinCount": 1, 
+	  "MaxCount": 1
 	}, running);
 	//Verifica se está rodando a instância
 	var reservationId, instanceId;
