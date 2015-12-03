@@ -165,7 +165,7 @@ var createM3U8 = function(presets, file, callback) {
       var folder = path.dirname(file);
       fs.writeFile(folder + '/' + m3u8File, m3u8, function(err) {
         if(err) return console.log(err);
-        callback();
+        callback(m3u8File);
       });
     }
   });
@@ -178,22 +178,26 @@ var createM3U8 = function(presets, file, callback) {
  **/
 var sendS3 = function(options, callback) {
   //Seta as variáveis
-  var name = '';
-  var init = '';  
   var client = knox.createClient(options.s3);
-  var arquivos = new Array();
-  var s3urls = new Array();
+  var urlVideo = '';
+  //Variável para salvar os arquivos enviados para o S3
+  var enviados = new Array();  
   //Busca os presets para capturar os nomes 
   video.presets(config, function(data){
     var presets = JSON.parse(data);
-    createM3U8(presets,options.ath.file, function(){
+    //Cria o arquivo m3u8 com base nos arquivos criados pelo codem-transcode
+    //Espera o retorno para continuar
+    createM3U8(presets,options.ath.file, function(m3u8File){
       var client = knox.createClient(options.s3);
+      //Diretório onde estão os arquivos
       var folder = path.dirname(options.ath.file);
+      //Retorna um array com todos os arquivos do diretório
       var files = getFiles(folder);
-      var enviados = new Array();
+      //Nome do arquivo sem a extenção
       var nameFile = path.basename(options.ath.file, path.extname(options.ath.file));
-
+      //Loop nos arquivos do diretório
       files.forEach(function(file, index){
+        //Pega o nome do arquivo da pasta com a extenção
         var nome = path.basename(file);
         //Envia para o S3
         client.putFile(file, '/' + options.idUser + '/' + nameFile + '/' + nome,{ 'x-amz-acl': 'public-read' }, function(err, res){
@@ -203,9 +207,19 @@ var sendS3 = function(options, callback) {
               if (err) throw err;
               //Adiciona a url a array enviados
               enviados.push(res.req.url); 
+              if(res.req.url.indexOf('/' + m3u8File) > 0) urlVideo = res.req.url;
               console.log(res.req.url);
               if (enviados.length == files.length) {
-                console.log('Concluído o envio dos arquivos')
+                console.log('Concluído o envio dos arquivos');
+                //Salva as urls dos vídeos no anexo
+                options.ath.s3urls = enviados;                
+                options.ath.save(function(err){
+                  if (err) throw err;
+                  //Retorno com a URL do vídeo para o Drupal
+                  console.log('URL do vídeo: ' + urlVideo);
+                  callback(urlVideo);  
+                });
+                
               }
             });
           } else if(err) throw(err);
@@ -213,7 +227,6 @@ var sendS3 = function(options, callback) {
       });      
     });
   });
-
 }
 
 /**
