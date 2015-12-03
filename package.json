@@ -24,6 +24,7 @@
     "bcrypt": "^0.7.7",
     "codem-transcode": "~0.5.7",
     "drupal-services-api": "^0.1.4",
+    "ec2": "^0.1.1",
     "express": "^3.4.8",
     "inquirer": "^0.9.0",
     "jade": "*",
