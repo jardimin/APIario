@@ -16,7 +16,7 @@
 		"awssecret": "oIpSevZFm+GHLHeZGPL02dhkWF7ZchDEVw6xrFA/",
 		"awsbucket": "colmeia",
 		"awszone": "us-east-1",
-		"awsimageid": "ami-9dbafbf7",
+		"awsimageid": "ami-450c402f",
 		"awskeyname": "jard-transc-nvirg",
 		"awsinstance": "m3.medium",
 		"bandwidth": {
