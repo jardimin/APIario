@@ -10,6 +10,7 @@ AttachmentsSchema = new Schema({
   user: [{ type: Schema.ObjectId, ref: 'User' }],
   file: String,
   originalFilename: String,
+  instancia: String,
   s3urls: Array,
   createdAt: {
     type: Date,

@@ -2,11 +2,19 @@ var User = require('./../models').User;
 var Attachments = require('./../models').Attachments;
 var errors = require('./../errors');
 var config = require('./../config');
+var path = require('path');
 var fs = require('fs');
+var mkdirp = require('mkdirp');
 //Módulo para tratamento dos arquivos
 var video = require('../modules/APIario-video');
 
 
+
+var createFolders = function(folderClient, folderFiles){
+  fs.exists(folderClient, function(exists) {
+
+  });
+}
 /**
  * Rota para mostrar os dados do usuário
  **/
@@ -18,19 +26,19 @@ module.exports.send = function(req, res, next) {
     //Nome do arquivo após o upload
     var oldFile = req.files.video.path;
     //Pega o nome do arquivo
-    var nome = oldFile.split("/");  
-    nome = nome[nome.length - 1];
+    //var nome = oldFile.split("/");  
+    //nome = nome[nome.length - 1];
+    var nome = path.basename(oldFile);
+    var pastaFile = path.basename(oldFile, path.extname(oldFile));
     //Move este arquivo para a pasta do usuário 
-    var newFile = config.upload + id + '/' + nome; 
-    //Verifica a existência da pasta e cria a pasta do usuário com o seu Id
-    fs.exists(config.upload + id, function(exists) {      
-        if (!exists) fs.mkdir(config.upload + id);
-        //Permissão de escrita na pasta
-        fs.chmod(config.upload + id, '0777');
-    });         
-    //Move o arquivo para a pasta destino
-    fs.readFile(oldFile , function(err, data) {
-        fs.writeFile(newFile, data, function(err) {
+    var newFile = config.upload + id + '/' + pastaFile + '/'+ nome; 
+    var folder = config.upload + id + '/' + pastaFile;
+    mkdirp(folder, function (err) {
+      if (err) throw err;
+      fs.chmod(folder, '0777', function(){
+        //Move o arquivo para a pasta destino
+        fs.readFile(oldFile , function(err, data) {
+          fs.writeFile(newFile, data, function(err) {
             //Apaga o arquivo temporário
             fs.unlink(oldFile, function(err){            
               if(err) throw err;
@@ -52,7 +60,9 @@ module.exports.send = function(req, res, next) {
                 }
               });                
             });
-        }); 
-    });  
+          }); 
+        });
+      });
+    });
   }); 
 };

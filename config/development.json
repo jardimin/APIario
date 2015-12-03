@@ -12,8 +12,16 @@
 		"password": "jbk401", 
 		"callback": "callback",
 		"notify": "http://colmeia.aovivonaweb.tv/notify",
-		"s3key": "AKIAJ4PS7F6W34GMGZHQ",
-		"s3secret": "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",
-		"s3bucket": "colmeia"
+		"awskey": "AKIAJ4PS7F6W34GMGZHQ",
+		"awssecret": "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",
+		"awsbucket": "colmeia",
+		"awszone": "us-east-1",
+		"awsimageid": "ami-9dbafbf7",
+		"awskeyname": "jard-transc-nvirg",
+		"bandwidth": {
+			"x264-400k": 457458,
+			"x264-1M": 925086,
+			"x264-2M": 1992375
+		}
 	}
 }

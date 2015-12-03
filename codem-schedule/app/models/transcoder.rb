@@ -18,12 +18,15 @@ class Transcoder
       else
         thumb_opts = nil
       end
+      string = '{"segment_time": "5"}'
+      segments_options = JSON.parse(string)
 
       {
         'source_file' => job.source_file,
         'destination_file' => job.destination_file,
         'encoder_options' => job.preset.parameters,
-        'thumbnail_options' => thumb_opts
+        'thumbnail_options' => thumb_opts,
+        'segments_options' => segments_options
       }
     end
 

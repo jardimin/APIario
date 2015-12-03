@@ -4,6 +4,7 @@ var models = require('../../models');
 var jobs = require('./models/jobs');
 var path = require('path');
 var request = require('request');
+var ec2 = require("ec2");
 
 /**
  * Método que inicia os jobs
@@ -20,29 +21,76 @@ var init = function (anexo, config) {
 		throw('Empty password');
 	if (config.callback == undefined)
 		throw('Empty password');
+    //Configurações da AWS key, secret e zona
+	ec2 = ec2({ 
+		key: config.awskey, 
+		secret: config.awssecret,
+		endpoint: config.awszone
+	});
+	//Levanta a instância e manda rodar pela imagem
+	ec2("RunInstances", {
+	  ImageId: config.awsimageid,
+	  KeyName: config.awskeyname, 
+	  MinCount: 1, 
+	  MaxCount: 1
+	}, running);
+	//Verifica se está rodando a instância
+	var reservationId, instanceId;
+	function running (error, response) {
+		if (error) throw error;
+		reservationId = response.reservationId
+		instanceId = response.instancesSet[0].instanceId;
+		describe();
+	}
+	//Pega os detalhes das instâncias que estão rodando
+	function describe () {
+		ec2("DescribeInstances", {}, starting);
+	}
+	//Verifica se foi startado
+	function starting (error, response) {
+		if (error) throw error;
+		var reservation, instance;
+		reservation = response.reservationSet.filter(function (reservation) {
+			return reservation.reservationId == reservationId;
+		})[0];
+		instance = reservation.instancesSet.filter(function (instance) {
+			return instance.instanceId == instanceId;
+		})[0];
+		if (instance.instanceState.name == "running") ready();
+		else setTimeout(describe, 2500);
+	}
 
-	//Busca os presets no Codem-Schedule
-	__presets(config,function(data){
-		var presets = JSON.parse(data);
-		//Loop em cada preset para criar o job
-		presets.forEach(function(preset, index) {
-			//Criando os jobs no schedule
-			__jobs(config, anexo.file, preset.name, function(data){
-				var obj = JSON.parse(data);
-				//Salvando o job na base
-				var job = new jobs({
-					attachments: anexo._id,
-					schedule: [obj]
+	//Ao rodar a instância
+	function ready () {
+		console.log("Instância rodando ID: " + instanceId);
+		//Salva a instância que vai tratar do arquivo
+		anexo.instancia = instanceId;
+		anexo.save(function(){
+			//Busca os presets no Codem-Schedule
+			__presets(config,function(data){
+				var presets = JSON.parse(data);
+				//Loop em cada preset para criar o job
+				presets.forEach(function(preset, index) {
+					//Criando os jobs no schedule
+					__jobs(config, anexo.file, preset.name, function(data){
+						var obj = JSON.parse(data);
+						//Salvando o job na base
+						var job = new jobs({
+							attachments: anexo._id,
+							schedule: [obj]
+						});
+						//Salva os dados
+						job.save(function(e){
+							//Caso tenha algum erro retora o erro
+							if(e) throw(e);
+						}); 			
+					});
+
 				});
-				//Salva os dados
-				job.save(function(e){
-					//Caso tenha algum erro retora o erro
-					if(e) throw(e);
-				}); 			
-			});
-
+			});	
 		});
-	});	
+
+	}
 }
 
 /**
