@@ -18,6 +18,7 @@
 		"awszone": "us-east-1",
 		"awsimageid": "ami-9dbafbf7",
 		"awskeyname": "jard-transc-nvirg",
+		"awsinstance": "m3.medium",
 		"bandwidth": {
 			"x264-400k": 457458,
 			"x264-1M": 925086,
