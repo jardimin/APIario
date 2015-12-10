@@ -38,39 +38,25 @@ module.exports.send = function(req, res, next) {
       fs.chmod(folder, '0777', function(){
         //Move o arquivo para a pasta destino
         fs.rename(oldFile,newFile, function(err){
-          //Apaga o arquivo temporário
-          fs.unlink(oldFile, function(err){            
-            if(err) throw err;
-            //Permissão de escrita no arquivo
-            fs.chmod(newFile, '0777');
-            //Instancia o Attachments com os dados para salvar
-            var anexo = new Attachments({
-              file: newFile,
-              originalFilename: req.files.video.name,
-              user: user._id
-            });
-            //Salva os dados
-            anexo.save(function(e){
-              if(e == null) {
-                //Carregando módulo do vídeo e criando job
-                video.init(anexo, config.video);
-                //Retorna o id do anexo salvo
-                res.json({id: anexo.id});
-              }
-            });                
+          if(err) throw err;
+          //Permissão de escrita no arquivo
+          fs.chmod(newFile, '0777');
+          //Instancia o Attachments com os dados para salvar
+          var anexo = new Attachments({
+            file: newFile,
+            originalFilename: req.files.video.name,
+            user: user._id
           });
+          //Salva os dados
+          anexo.save(function(e){
+            if(e == null) {
+              //Carregando módulo do vídeo e criando job
+              video.init(anexo, config.video);
+              //Retorna o id do anexo salvo
+              res.json({id: anexo.id});
+            }
+          });                
         });
-        //Move o arquivo para a pasta destino
-        /*fs.readFile(oldFile , function(err, data) {
-          fs.writeFile(newFile, data, function(err) {
-
-
-
-
-
-          }); 
-        });*/
-
       });
     });
   }); 
