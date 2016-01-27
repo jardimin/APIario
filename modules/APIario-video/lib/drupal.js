@@ -263,6 +263,8 @@ var endStance = function(instancia) {
         ec2("TerminateInstances", {InstanceId: instancia}, function(error,response){
           console.log('Encerrando a instancia: ' + instancia);
         });            
+      } else {
+        console.log('Aguardando para encerrar a instância: ' + instancia);
       }            
     });
 
