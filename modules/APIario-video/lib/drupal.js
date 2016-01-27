@@ -8,6 +8,7 @@ var knox = require('knox');
 var sys = require('sys');
 var fs = require('fs');
 var ec2 = require("ec2");
+var mkdirp = require('mkdirp');
 
 
 /**
@@ -21,17 +22,10 @@ var ec2 = require("ec2");
 var drupal = function(apiario_codigo, status, pub, callback) {
   models.Attachments.findOne({ "_id": apiario_codigo}, function (err, ath) {
     models.User.findOne({"_id": ath.user}, function (err2, user){
+      //Ao publicar encessar a instância
       if(pub) {
-        //Configurações da AWS key, secret e zona
-        ec2 = ec2({ 
-          key: config.awskey, 
-          secret: config.awssecret,
-          endpoint: config.awszone
-        });        
-        //Encerra a instancia que tratou os vídeos na Amazon
-        ec2("TerminateInstances", {InstanceId: ath.instancia}, function(error,response){
-          console.log('Encerrando a instancia: ' + ath.instancia);
-        });
+        //Encerrando a instância
+        endStance(ath.instancia);
       }
       var idUser = user._id;
       //Seta o key do usuário do drupal
@@ -199,8 +193,23 @@ var sendS3 = function(options, callback) {
       files.forEach(function(file, index){
         //Pega o nome do arquivo da pasta com a extenção
         var nome = path.basename(file);
+        //Verificação dos nomes dos arquivos
+        var transcodeEx = new RegExp("(x264-(1M|2M|400k)).*mp4$");
+        var streamEx = new RegExp("(x264-(1M|2M|400k)).*(ts|m3u8)$");
+        var thumbsEx = new RegExp("(x264-(1M|2M|400k)).*png$");
+        var diretorio = '/';
+
+        if(transcodeEx.test(nome))
+          diretorio = '/transcode/';
+        else if(streamEx.test(nome))
+          diretorio = '/stream/';
+        else if(thumbsEx.test(nome))
+          diretorio = '/thumbs/';
+        else
+          diretorio = '/original/';
+
         //Envia para o S3
-        client.putFile(file, '/' + options.idUser + '/' + nameFile + '/' + nome,{ 'x-amz-acl': 'public-read' }, function(err, res){
+        client.putFile(file, '/' + options.idUser + '/' + nameFile + diretorio + nome,{ 'x-amz-acl': 'public-read' }, function(err, res){
           if (200 == res.statusCode) {
             //Deleta o arquivo da máquina local
             fs.unlink(file, function (err) {
@@ -227,6 +236,59 @@ var sendS3 = function(options, callback) {
       });      
     });
   });
+}
+
+/**
+ * Encerra as instâncias caso não tenha nenhum job sendo processado
+ * @param callback function
+ **/
+var endStance = function(instancia) {
+  //Configurações da AWS key, secret e zona
+  ec2 = ec2({ 
+    key: config.awskey, 
+    secret: config.awssecret,
+    endpoint: config.awszone
+  });
+  //A cada 2 minutos verifica se existe jobs sendo processados
+  var intervalo = setInterval(function(){
+    //Retorna os jobs processando
+    getJobStatusProcessing(function(data){
+      //Converte em JSON o retorno
+      var jobs = JSON.parse(data);
+      //Verifica se a lista está vazia
+      if(jobs == 0){
+        //Para a verificação
+        clearInterval(intervalo);
+        //Encerra a instancia que tratou os vídeos na Amazon
+        ec2("TerminateInstances", {InstanceId: instancia}, function(error,response){
+          console.log('Encerrando a instancia: ' + instancia);
+        });            
+      }            
+    });
+
+  }, 120000);   
+}
+
+/**
+ * Retorna a lista dos jobs sendo processados
+ * @param callback function
+ **/
+var getJobStatusProcessing = function(callback){
+  request(
+  { 
+    method: 'GET',
+    uri: config.schedule + '/api/jobs/processing.json',
+    auth: {
+      user: config.user,
+      pass: config.password,
+      sendImmediately: false
+    },
+    gzip: true
+  }
+  , function (error, response, body) {
+    if(error) throw(error);
+    callback(body);
+  });  
 }
 
 /**
