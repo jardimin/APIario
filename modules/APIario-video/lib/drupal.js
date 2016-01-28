@@ -201,12 +201,13 @@ var sendS3 = function(options, callback) {
 
         if(transcodeEx.test(nome))
           diretorio = '/transcode/';
-        else if(streamEx.test(nome))
+        else if(streamEx.test(nome) || (nome == m3u8File))
           diretorio = '/stream/';
         else if(thumbsEx.test(nome))
           diretorio = '/thumbs/';
         else
           diretorio = '/original/';
+
 
         //Envia para o S3
         client.putFile(file, '/' + options.idUser + '/' + nameFile + diretorio + nome,{ 'x-amz-acl': 'public-read' }, function(err, res){
