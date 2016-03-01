@@ -90,7 +90,6 @@ var init = function (anexo, config) {
 				});
 			});	
 		});
-
 	}
 }
 

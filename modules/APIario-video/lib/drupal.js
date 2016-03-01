@@ -107,8 +107,8 @@ var getForm = function(options, callback) {
   //Cria o formulário para envio das informações
   //Verifica se o pub(publicar) está ativado
   if(options.pub == true) {
-    sendS3(options, function(urlVideo) {
-      callback({ status: 1, apiario_status: options.status, apiario_url_video: urlVideo });
+    sendS3(options, function(retorno) {
+      callback({ status: 1, apiario_status: options.status, apiario_url_video: retorno.urlVideo, apiario_url_thumb: retorno.urlThumb});
     });
   } else callback({ apiario_status: options.status });
 }
@@ -174,6 +174,7 @@ var sendS3 = function(options, callback) {
   //Seta as variáveis
   var client = knox.createClient(options.s3);
   var urlVideo = '';
+  var urlThumb = '';
   //Variável para salvar os arquivos enviados para o S3
   var enviados = new Array();  
   //Busca os presets para capturar os nomes 
@@ -218,6 +219,8 @@ var sendS3 = function(options, callback) {
               //Adiciona a url a array enviados
               enviados.push(res.req.url); 
               if(res.req.url.indexOf('/' + m3u8File) > 0) urlVideo = res.req.url;
+              if(thumbsEx.test(res.req.url)) urlThumb = res.req.url;
+  
               console.log(res.req.url);
               if (enviados.length == files.length) {
                 console.log('Concluído o envio dos arquivos');
@@ -227,7 +230,7 @@ var sendS3 = function(options, callback) {
                   if (err) throw err;
                   //Retorno com a URL do vídeo para o Drupal
                   console.log('URL do vídeo: ' + urlVideo);
-                  callback(urlVideo);  
+                  callback({urlVideo: urlVideo, urlThumb: urlThumb});
                 });
                 
               }
