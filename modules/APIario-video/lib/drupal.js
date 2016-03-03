@@ -325,3 +325,4 @@ var setStatus = function(options, callback) {
 }
 
 module.exports.drupal = drupal;
+module.exports.endStance = endStance;

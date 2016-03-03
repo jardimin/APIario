@@ -5,7 +5,6 @@ var config = require('./../../../config');
 var video = require('../index.js');
 var request = require('request');
 var drupal = require('../lib/drupal');
-var endStance = require('../lib/drupal').endStance;
 //Variável global para verificar se foi concluído os arquivos para evitar reenvio
 global.notifys3 = new Array();
 
@@ -54,7 +53,7 @@ exports.notify = function(req, res, next) {
         //Busca o anexo
         models.Attachments.findOne({ "_id": job.attachments}, function (err, ath) {
           //Encerrando a instância
-          endStance(ath.instancia);
+          drupal.endStance(ath.instancia);
         });
       }
       //Salva o schedule novamente com novo status e mensagens
