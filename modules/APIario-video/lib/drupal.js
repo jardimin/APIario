@@ -195,7 +195,7 @@ var sendS3 = function(options, callback) {
         //Pega o nome do arquivo da pasta com a extenção
         var nome = path.basename(file);
         //Verificação dos nomes dos arquivos
-        var transcodeEx = new RegExp("(x264-(1M|2M|400k)).*mp4$");
+        var transcodeEx = new RegExp("(x264-(1M|2M|400k)).*(mp4|mov|flv|avi|webm)$");
         var streamEx = new RegExp("(x264-(1M|2M|400k)).*(ts|m3u8)$");
         var thumbsEx = new RegExp("(x264-(1M|2M|400k)).*png$");
         var diretorio = '/';
