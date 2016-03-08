@@ -212,6 +212,7 @@ var sendS3 = function(options, callback) {
 
         //Envia para o S3
         client.putFile(file, '/' + options.idUser + '/' + nameFile + diretorio + nome,{ 'x-amz-acl': 'public-read' }, function(err, res){
+          console.log(res);
           if (200 == res.statusCode) {
             //Deleta o arquivo da máquina local
             fs.unlink(file, function (err) {
