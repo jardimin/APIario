@@ -31,3 +31,7 @@ Ex:
 x264-,tamanho1,tamanho2,tamanho3
 
 Detalhes http://pad.jardim.in/p/video-publisher
+
+##Detalhe
+
+O IP no hosts do colmeia.aovivonaweb.tv deve estar com IP interno na Amazon para que as notificações funcionem, as notificações não aceitam ips externos por questões de segurança.
