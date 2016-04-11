@@ -212,28 +212,31 @@ var sendS3 = function(options, callback) {
 
         //Envia para o S3
         client.putFile(file, '/' + options.idUser + '/' + nameFile + diretorio + nome,{ 'x-amz-acl': 'public-read' }, function(err, res){
-          console.log(res);
           if (200 == res.statusCode) {
-            //Deleta o arquivo da máquina local
-            fs.unlink(file, function (err) {
-              if (err) throw err;
-              //Adiciona a url a array enviados
-              enviados.push(res.req.url); 
-              if(res.req.url.indexOf('/' + m3u8File) > 0) urlVideo = res.req.url;
-              if(thumbsEx.test(res.req.url)) urlThumb = res.req.url;
-  
-              console.log(res.req.url);
-              if (enviados.length == files.length) {
-                console.log('Concluído o envio dos arquivos');
-                //Salva as urls dos vídeos no anexo
-                options.ath.s3urls = enviados;                
-                options.ath.save(function(err){
+            fs.exists(file, function(exists) {
+              if(exists) {
+                //Deleta o arquivo da máquina local
+                fs.unlink(file, function (err) {
                   if (err) throw err;
-                  //Retorno com a URL do vídeo para o Drupal
-                  console.log('URL do vídeo: ' + urlVideo);
-                  callback({urlVideo: urlVideo, urlThumb: urlThumb});
+                  //Adiciona a url a array enviados
+                  enviados.push(res.req.url); 
+                  if(res.req.url.indexOf('/' + m3u8File) > 0) urlVideo = res.req.url;
+                  if(thumbsEx.test(res.req.url)) urlThumb = res.req.url;
+      
+                  console.log(res.req.url);
+                  if (enviados.length == files.length) {
+                    console.log('Concluído o envio dos arquivos');
+                    //Salva as urls dos vídeos no anexo
+                    options.ath.s3urls = enviados;                
+                    options.ath.save(function(err){
+                      if (err) throw err;
+                      //Retorno com a URL do vídeo para o Drupal
+                      console.log('URL do vídeo: ' + urlVideo);
+                      callback({urlVideo: urlVideo, urlThumb: urlThumb});
+                    });
+                    
+                  }
                 });
-                
               }
             });
           } else if(err) throw(err);
