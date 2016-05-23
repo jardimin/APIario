@@ -4,11 +4,10 @@ var configGeral = require('./../../../config');
 var config = require('./../../../config').video;
 var path = require('path');
 var video = require('../index');
-var knox = require('knox');
 var sys = require('sys');
-var fs = require('fs');
+var fs = require('fs-extra');
 var ec2 = require("ec2");
-var mkdirp = require('mkdirp');
+var s3 = require("s3");
 
 
 /**
@@ -53,9 +52,17 @@ var drupal = function(apiario_codigo, status, pub, callback) {
           idUser: idUser,
           ath: ath,
           s3: {
-            key: config.awskey,
-            secret: config.awssecret,
-            bucket: config.awsbucket
+            maxAsyncS3: 20,
+            s3RetryCount: 3,
+            s3RetryDelay: 1000,
+            multipartUploadThreshold: 20971520,
+            multipartUploadSize: 15728640,
+            s3Options: {
+              accessKeyId: config.awskey,
+              secretAccessKey: config.awssecret,
+              region: config.awszone,
+              ACL: "public-read"
+            },
           }
         };
         setStatus(options, function(){
@@ -109,6 +116,7 @@ var getForm = function(options, callback) {
   if(options.pub == true) {
     sendS3(options, function(retorno) {
       callback({ status: 1, apiario_status: options.status, apiario_url_video: retorno.urlVideo, apiario_url_thumb: retorno.urlThumb});
+      console.log('Retorno para o Drupal');
     });
   } else callback({ apiario_status: options.status });
 }
@@ -165,25 +173,82 @@ var createM3U8 = function(presets, file, callback) {
   });
 }
 
+
+var getUrlsS3 = function(arquivo, options, nameFile, callback) {
+  var client = s3.createClient(options.s3);
+  var listar = client.listObjects({
+    s3Params: {
+      Bucket: config.awsbucket,
+      Prefix: options.idUser +"/" + nameFile + "/"
+    },
+  });
+  listar.on('data', function(data) {
+    data.Contents.forEach(function(file, index) {
+      if (file.Key.indexOf(arquivo) > 0) {
+        callback(file.Key);
+        return false;
+      }
+    });
+  });  
+}
+
 /**
  * Envia os arquivos locais tratados pelo codem schedule para a Amazon S3
  * @param option json
  * @param callback function retorno dos dados para envio
  **/
 var sendS3 = function(options, callback) {
+  console.log('Organizando os arquivos...');
+  organizar(options, function(m3u8File, nameFile) {
+    var client = s3.createClient(options.s3);
+    var params = {
+      localDir: "/mnt/colmeia/upload/"+options.idUser+"/",
+      deleteRemoved: false,
+      s3Params: {
+        Bucket: config.awsbucket,
+        Prefix: options.idUser + '/',
+        ACL: "public-read" 
+      },
+    };
+    console.log('Enviando os arquivos para S3....');
+    var uploader = client.uploadDir(params);
+    uploader.on('error', function(err) {
+      console.error("Erro ao enviar arquivos para S3:", err.stack);
+    });
+    uploader.on('progress', function() {
+      console.log("Enviando...", uploader.progressAmount, uploader.progressTotal);
+    });
+    uploader.on('end', function() {
+      console.log('Envio concluído.');
+      getUrlsS3(m3u8File, options, nameFile,function(m3u8){
+        getUrlsS3('.png', options, nameFile,function(png){
+          //Retorno com a URL do vídeo para o Drupal
+          var urlVideo = s3.getPublicUrlHttp(config.awsbucket,'') + m3u8;
+          var urlThumb = s3.getPublicUrlHttp(config.awsbucket,'') + png;
+          console.log('URL do vídeo: ' + urlVideo);
+          callback({urlVideo: urlVideo, urlThumb: urlThumb});  
+          return false;
+        });
+      });
+    });    
+  });
+}
+
+
+var organizar = function(options,callback) {
   //Seta as variáveis
-  var client = knox.createClient(options.s3);
-  var urlVideo = '';
-  var urlThumb = '';
-  //Variável para salvar os arquivos enviados para o S3
-  var enviados = new Array();  
+  var transcodeEx = new RegExp("(x264-(1M|2M|400k)).*(mp4|mov|flv|avi|webm|3gp)$");
+  var streamEx = new RegExp("(x264-(1M|2M|400k)).*(ts|m3u8)$");
+  var thumbsEx = new RegExp("(x264-(1M|2M|400k)).*png$");
+  var diretorio = '/';  
+  var enviado = new Array();
   //Busca os presets para capturar os nomes 
   video.presets(config, function(data){
     var presets = JSON.parse(data);
     //Cria o arquivo m3u8 com base nos arquivos criados pelo codem-transcode
     //Espera o retorno para continuar
+    console.log('Criando m3u8...');
     createM3U8(presets,options.ath.file, function(m3u8File){
-      var client = knox.createClient(options.s3);
       //Diretório onde estão os arquivos
       var folder = path.dirname(options.ath.file);
       //Retorna um array com todos os arquivos do diretório
@@ -192,15 +257,11 @@ var sendS3 = function(options, callback) {
       var nameFile = path.basename(options.ath.file, path.extname(options.ath.file));
       //Loop nos arquivos do diretório
       files.forEach(function(file, index){
+        enviado[index] = false;
         //Pega o nome do arquivo da pasta com a extenção
         var nome = path.basename(file);
         //Verificação dos nomes dos arquivos
-        var transcodeEx = new RegExp("(x264-(1M|2M|400k)).*(mp4|mov|flv|avi|webm|3gp)$");
-        var streamEx = new RegExp("(x264-(1M|2M|400k)).*(ts|m3u8)$");
-        var thumbsEx = new RegExp("(x264-(1M|2M|400k)).*png$");
-        var diretorio = '/';
-
-        if(transcodeEx.test(nome))
+        if(transcodeEx.test(nome)) 
           diretorio = '/transcode/';
         else if(streamEx.test(nome) || (nome == m3u8File))
           diretorio = '/stream/';
@@ -208,40 +269,31 @@ var sendS3 = function(options, callback) {
           diretorio = '/thumbs/';
         else
           diretorio = '/original/';
+        if(diretorio != '/') {
+          fs.move(file, folder + diretorio + nome, function (err) {
+            enviado[index] = true;
+            if (err) console.error(err);
+          });
+        }
+        if (index === files.length - 1) {
+          console.log('Organização concluída.');       
+        }
+      }); 
+
+      //Verifica em alguns segundos se moveu todos os arquivos
+      var intervalo = setInterval(function(){
+        //Verifica moveu todos os arquivos
+        if(enviado.every(function(element){return element == true})){
+          console.log('Arquivos movidos com sucesso!');
+          //Para a verificação
+          clearInterval(intervalo);
+          callback(m3u8File, nameFile);
+        } else {
+          console.log('Aguardando mover os arquivos...');
+        } 
+      }, 300);
 
 
-        //Envia para o S3
-        client.putFile(file, '/' + options.idUser + '/' + nameFile + diretorio + nome,{ 'x-amz-acl': 'public-read' }, function(err, res){
-          if (200 == res.statusCode) {
-            fs.exists(file, function(exists) {
-              if(exists) {
-                //Deleta o arquivo da máquina local
-                fs.unlink(file, function (err) {
-                  if (err) throw err;
-                  //Adiciona a url a array enviados
-                  enviados.push(res.req.url); 
-                  if(res.req.url.indexOf('/' + m3u8File) > 0) urlVideo = res.req.url;
-                  if(thumbsEx.test(res.req.url)) urlThumb = res.req.url;
-      
-                  console.log(res.req.url);
-                  if (enviados.length == files.length) {
-                    console.log('Concluído o envio dos arquivos');
-                    //Salva as urls dos vídeos no anexo
-                    options.ath.s3urls = enviados;                
-                    options.ath.save(function(err){
-                      if (err) throw err;
-                      //Retorno com a URL do vídeo para o Drupal
-                      console.log('URL do vídeo: ' + urlVideo);
-                      callback({urlVideo: urlVideo, urlThumb: urlThumb});
-                    });
-                    
-                  }
-                });
-              }
-            });
-          } else if(err) throw(err);
-        }); 
-      });      
     });
   });
 }
@@ -324,7 +376,11 @@ var setStatus = function(options, callback) {
     }
     , function (error, response, data) {
       if(error) throw(error);
-      if(response.statusCode == 200) callback();
+      if(response.statusCode == 200) {
+        console.log('Retorno efetuado com sucesso!');
+        console.log('Concluído!');
+        callback();
+      }
     });
   });
 }
