@@ -117,6 +117,7 @@ var getForm = function(options, callback) {
     sendS3(options, function(retorno) {
       callback({ status: 1, apiario_status: options.status, apiario_url_video: retorno.urlVideo, apiario_url_thumb: retorno.urlThumb});
       console.log('Retorno para o Drupal');
+      console.log('Concluído!');
     });
   } else callback({ apiario_status: options.status });
 }
@@ -144,6 +145,7 @@ var getFiles = function(dir, files_){
  * Cria o arquivo m3u8 relacionados com os presets
  * @param presets
  * @param file
+ * @callback retorno
  **/
 var createM3U8 = function(presets, file, callback) {
   //Cria o nome do arquivo com m3u8
@@ -173,20 +175,30 @@ var createM3U8 = function(presets, file, callback) {
   });
 }
 
-
+/**
+ * Busca no S3 os arquivos enviados para retornar a URL
+ * @param arquivo
+ * @param options opcoes gerais configuradas anteriormente
+ * @param nameFile nome do arquivo s3
+ * @param callback retorno 
+ **/
 var getUrlsS3 = function(arquivo, options, nameFile, callback) {
   var client = s3.createClient(options.s3);
+  //Prepara para listar
   var listar = client.listObjects({
     s3Params: {
       Bucket: config.awsbucket,
       Prefix: options.idUser +"/" + nameFile + "/"
     },
   });
+  //Ao retornar o conteúdo
   listar.on('data', function(data) {
-    data.Contents.forEach(function(file, index) {
+    data.Contents.forEach(function(file, index, arr) {
       if (file.Key.indexOf(arquivo) > 0) {
+        //Encerra o loop
+        arr.length = 0;
+        //Retorna o arquivo
         callback(file.Key);
-        return false;
       }
     });
   });  
@@ -211,37 +223,51 @@ var sendS3 = function(options, callback) {
       },
     };
     console.log('Enviando os arquivos para S3....');
+    //Inicia o uploader com os parametros configurados
     var uploader = client.uploadDir(params);
+    //Quando acontecer um erro no envio exibe a mensagem
     uploader.on('error', function(err) {
       console.error("Erro ao enviar arquivos para S3:", err.stack);
     });
+    //Processo do envio
     uploader.on('progress', function() {
       console.log("Enviando...", uploader.progressAmount, uploader.progressTotal);
     });
+    //Fim do envio do arquivo para o S3
     uploader.on('end', function() {
       console.log('Envio concluído.');
+      //Pega o nome do arquivo m3u8 para retorno
       getUrlsS3(m3u8File, options, nameFile,function(m3u8){
+        //Pega o nome do arquivo png para retorno
         getUrlsS3('.png', options, nameFile,function(png){
           //Retorno com a URL do vídeo para o Drupal
           var urlVideo = s3.getPublicUrlHttp(config.awsbucket,'') + m3u8;
           var urlThumb = s3.getPublicUrlHttp(config.awsbucket,'') + png;
           console.log('URL do vídeo: ' + urlVideo);
+          console.log('Excluindo os arquivos localmente...');
+          //Exclui os arquivos
+          fs.emptyDir("/mnt/colmeia/upload/"+options.idUser+"/" + nameFile + "/");
+          //Retorna o callback
           callback({urlVideo: urlVideo, urlThumb: urlThumb});  
-          return false;
         });
       });
     });    
   });
 }
 
-
+/**
+ * Organiza os arquivos antes de fazer o envio para o S3
+ * @param option json
+ * @param callback function retorno dos dados para envio
+ **/
 var organizar = function(options,callback) {
   //Seta as variáveis
   var transcodeEx = new RegExp("(x264-(1M|2M|400k)).*(mp4|mov|flv|avi|webm|3gp)$");
   var streamEx = new RegExp("(x264-(1M|2M|400k)).*(ts|m3u8)$");
   var thumbsEx = new RegExp("(x264-(1M|2M|400k)).*png$");
   var diretorio = '/';  
-  var enviado = new Array();
+  //Variável para verificação dos arquivos movidos
+  var movido = new Array();
   //Busca os presets para capturar os nomes 
   video.presets(config, function(data){
     var presets = JSON.parse(data);
@@ -257,7 +283,7 @@ var organizar = function(options,callback) {
       var nameFile = path.basename(options.ath.file, path.extname(options.ath.file));
       //Loop nos arquivos do diretório
       files.forEach(function(file, index){
-        enviado[index] = false;
+        movido[index] = false;
         //Pega o nome do arquivo da pasta com a extenção
         var nome = path.basename(file);
         //Verificação dos nomes dos arquivos
@@ -269,12 +295,15 @@ var organizar = function(options,callback) {
           diretorio = '/thumbs/';
         else
           diretorio = '/original/';
+
         if(diretorio != '/') {
           fs.move(file, folder + diretorio + nome, function (err) {
-            enviado[index] = true;
+            //Adiciona movido na array
+            movido[index] = true;
             if (err) console.error(err);
           });
         }
+        //Temino da organização, falta mover os arquivos
         if (index === files.length - 1) {
           console.log('Organização concluída.');       
         }
@@ -283,7 +312,7 @@ var organizar = function(options,callback) {
       //Verifica em alguns segundos se moveu todos os arquivos
       var intervalo = setInterval(function(){
         //Verifica moveu todos os arquivos
-        if(enviado.every(function(element){return element == true})){
+        if(movido.every(function(element){return element == true})){
           console.log('Arquivos movidos com sucesso!');
           //Para a verificação
           clearInterval(intervalo);
@@ -300,7 +329,7 @@ var organizar = function(options,callback) {
 
 /**
  * Encerra as instâncias caso não tenha nenhum job sendo processado
- * @param callback function
+ * @param instancia codigo da instancia para encerramento
  **/
 var endStance = function(instancia) {
   console.log('Verificando se é possível encerrar a instância: ' + instancia);
@@ -377,8 +406,7 @@ var setStatus = function(options, callback) {
     , function (error, response, data) {
       if(error) throw(error);
       if(response.statusCode == 200) {
-        console.log('Retorno efetuado com sucesso!');
-        console.log('Concluído!');
+        console.log('Notificação enviada para o Drupal...');
         callback();
       }
     });
