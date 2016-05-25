@@ -409,6 +409,9 @@ var setStatus = function(options, callback) {
       if(response.statusCode == 200) {
         console.log('Notificação enviada para o Drupal...');
         callback();
+      } else {
+        console.log('Notificação falhou...');
+        console.log(response);
       }
     });
   });
