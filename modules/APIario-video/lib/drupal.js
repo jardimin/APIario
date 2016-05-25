@@ -231,7 +231,7 @@ var sendS3 = function(options, callback) {
     });
     //Processo do envio
     uploader.on('progress', function() {
-      console.log("Enviando...", uploader.progressAmount, uploader.progressTotal);
+      //console.log("Enviando...", uploader.progressAmount, uploader.progressTotal);
     });
     //Fim do envio do arquivo para o S3
     uploader.on('end', function() {
