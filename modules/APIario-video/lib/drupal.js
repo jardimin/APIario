@@ -176,42 +176,13 @@ var createM3U8 = function(presets, file, callback) {
 }
 
 /**
- * Busca no S3 os arquivos enviados para retornar a URL
- * @param arquivo
- * @param options opcoes gerais configuradas anteriormente
- * @param nameFile nome do arquivo s3
- * @param callback retorno 
- **/
-var getUrlsS3 = function(arquivo, options, nameFile, callback) {
-  var client = s3.createClient(options.s3);
-  //Prepara para listar
-  var listar = client.listObjects({
-    s3Params: {
-      Bucket: config.awsbucket,
-      Prefix: options.idUser +"/" + nameFile + "/"
-    },
-  });
-  //Ao retornar o conteúdo
-  listar.on('data', function(data) {
-    data.Contents.forEach(function(file, index, arr) {
-      if (file.Key.indexOf(arquivo) > 0) {
-        //Encerra o loop
-        arr.length = 0;
-        //Retorna o arquivo
-        callback(file.Key);
-      }
-    });
-  });  
-}
-
-/**
  * Envia os arquivos locais tratados pelo codem schedule para a Amazon S3
  * @param option json
  * @param callback function retorno dos dados para envio
  **/
 var sendS3 = function(options, callback) {
   console.log('Organizando os arquivos...');
-  organizar(options, function(m3u8File, nameFile) {
+  organizar(options, function(m3u8File, png, nameFile) {
     var client = s3.createClient(options.s3);
     var params = {
       localDir: "/mnt/colmeia/upload/"+options.idUser+"/",
@@ -231,29 +202,21 @@ var sendS3 = function(options, callback) {
     });
     //Processo do envio
     uploader.on('progress', function() {
-      if(uploader.progressAmount > 0) console.log('Iniciando o envio...');
       if(uploader.progressAmount > 0)
-        if (uploader.progressAmount == uploader.progressTotal) console.log('Finalizando o envio...');
-//      console.log("Enviando...", uploader.progressAmount, uploader.progressTotal);
+        if (uploader.progressAmount == uploader.progressTotal) console.log('Enviando arquivos...');
     });
     //Fim do envio do arquivo para o S3
     uploader.on('end', function() {
       console.log('Envio concluído.');
-      //Pega o nome do arquivo m3u8 para retorno
-      getUrlsS3(m3u8File, options, nameFile,function(m3u8){
-        //Pega o nome do arquivo png para retorno
-        getUrlsS3('.png', options, nameFile,function(png){
-          //Retorno com a URL do vídeo para o Drupal
-          var urlVideo = s3.getPublicUrlHttp(config.awsbucket,'') + m3u8;
-          var urlThumb = s3.getPublicUrlHttp(config.awsbucket,'') + png;
-          console.log('URL do vídeo: ' + urlVideo);
-          console.log('Excluindo os arquivos localmente...');
-          //Exclui os arquivos
-          fs.emptyDir("/mnt/colmeia/upload/"+options.idUser+"/" + nameFile + "/");
-          //Retorna o callback
-          callback({urlVideo: urlVideo, urlThumb: urlThumb});  
-        });
-      });
+      //Retorno com a URL do vídeo para o Drupal
+      var urlVideo = s3.getPublicUrlHttp(config.awsbucket,'') + options.idUser + '/' + nameFile + '/stream/' + nameFile + '.m3u8';
+      var urlThumb = s3.getPublicUrlHttp(config.awsbucket,'') + options.idUser + '/' + nameFile + '/thumbs/' + png;
+      console.log('URL do vídeo: ' + urlVideo);
+      console.log('Excluindo os arquivos localmente...');
+      //Exclui os arquivos
+      fs.emptyDir("/mnt/colmeia/upload/"+options.idUser+"/" + nameFile + "/");
+      //Retorna o callback
+      callback({urlVideo: urlVideo, urlThumb: urlThumb});  
     });    
   });
 }
@@ -269,6 +232,7 @@ var organizar = function(options,callback) {
   var streamEx = new RegExp("(x264-(1M|2M|400k)).*(ts|m3u8)$");
   var thumbsEx = new RegExp("(x264-(1M|2M|400k)).*png$");
   var diretorio = '/';  
+  var png = '';
   //Variável para verificação dos arquivos movidos
   var movido = new Array();
   //Busca os presets para capturar os nomes 
@@ -294,8 +258,10 @@ var organizar = function(options,callback) {
           diretorio = '/transcode/';
         else if(streamEx.test(nome) || (nome == m3u8File))
           diretorio = '/stream/';
-        else if(thumbsEx.test(nome))
+        else if(thumbsEx.test(nome)) {
+          png = nome;
           diretorio = '/thumbs/';
+        }
         else
           diretorio = '/original/';
 
@@ -319,7 +285,7 @@ var organizar = function(options,callback) {
           console.log('Arquivos movidos com sucesso!');
           //Para a verificação
           clearInterval(intervalo);
-          callback(m3u8File, nameFile);
+          callback(m3u8File, png, nameFile);
         } else {
           console.log('Aguardando mover os arquivos...');
         } 
@@ -355,7 +321,7 @@ var endStance = function(instancia) {
         //Encerra a instancia que tratou os vídeos na Amazon
         ec2("TerminateInstances", {InstanceId: instancia}, function(error,response){
           console.log('Encerrando a instancia: ' + instancia);
-        });            
+        });
       } else {
         console.log('Aguardando para encerrar a instância: ' + instancia);
       }            

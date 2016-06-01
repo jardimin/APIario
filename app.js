@@ -28,6 +28,9 @@ app.configure('development', 'production', function() {
   app.set('view engine', 'jade');
   app.use(express.cookieParser('ncie0fnft6wjfmgtjz8i'));
   app.use(express.cookieSession());  
+  app.use(cookieSession({
+    maxAge: 60 * 60 * 24
+  }));
   app.use(express.logger('dev'));
   app.use(express.bodyParser({ 
     keepExtensions: true, 
@@ -90,6 +93,7 @@ app.oauth = oauthserver({
   model: models.oauth,
   //Formatos suportados pelo OAuth2
   grants: ['password', 'authorization_code', 'refresh_token'],
+  accessTokenLifetime: 60 * 60 * 24,
   debug: true
 });
 
