@@ -33,29 +33,32 @@ module.exports.send = function(req, res, next) {
     //Move este arquivo para a pasta do usuário 
     var newFile = config.upload + id + '/' + pastaFile + '/'+ nome; 
     var folder = config.upload + id + '/' + pastaFile;
+
     mkdirp(folder, function (err) {
       if (err) throw err;
-      fs.chmod(folder, '0777', function(){
-        //Move o arquivo para a pasta destino
-        fs.rename(oldFile,newFile, function(err){
-          if(err) throw err;
-          //Permissão de escrita no arquivo
-          fs.chmod(newFile, '0777');
-          //Instancia o Attachments com os dados para salvar
-          var anexo = new Attachments({
-            file: newFile,
-            originalFilename: req.files.video.name,
-            user: user._id
+      fs.chmod(config.upload + id, '0777', function() {
+        fs.chmod(folder, '0777', function(){        
+          //Move o arquivo para a pasta destino
+          fs.rename(oldFile,newFile, function(err){
+            if(err) throw err;
+            //Permissão de escrita no arquivo
+            fs.chmod(newFile, '0777');
+            //Instancia o Attachments com os dados para salvar
+            var anexo = new Attachments({
+              file: newFile,
+              originalFilename: req.files.video.name,
+              user: user._id
+            });
+            //Salva os dados
+            anexo.save(function(e){
+              if(e == null) {
+                //Carregando módulo do vídeo e criando job
+                video.init(anexo, config.video);
+                //Retorna o id do anexo salvo
+                res.json({id: anexo.id});
+              }
+            });                
           });
-          //Salva os dados
-          anexo.save(function(e){
-            if(e == null) {
-              //Carregando módulo do vídeo e criando job
-              video.init(anexo, config.video);
-              //Retorna o id do anexo salvo
-              res.json({id: anexo.id});
-            }
-          });                
         });
       });
     });
